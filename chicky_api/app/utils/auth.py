@@ -5,41 +5,44 @@ from typing import Any
 import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 
 from ..config import get_settings
 
 security = HTTPBearer()
 
 
-def verify_supabase_jwt(token: str) -> dict[str, Any]:
-    """Verify a Supabase-issued JWT and return the decoded payload."""
+async def verify_supabase_jwt(token: str) -> dict[str, Any]:
+    """Verify a Supabase-issued JWT via the Supabase Auth REST API."""
     settings = get_settings()
-    try:
-        payload = jwt.decode(
-            token,
-            settings.supabase_jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            f"{settings.supabase_url}/auth/v1/user",
+            headers={
+                "apikey": settings.supabase_service_role_key,
+                "Authorization": f"Bearer {token}",
+            },
+            timeout=10,
         )
-        return payload
-    except JWTError as exc:
+    if resp.status_code != 200:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid authentication credentials: {exc}",
+            detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    user = resp.json()
+    user.setdefault("sub", user.get("id"))
+    return user
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict[str, Any]:
-    """FastAPI dependency: returns the decoded JWT payload."""
-    return verify_supabase_jwt(credentials.credentials)
+    """FastAPI dependency: returns the Supabase user object."""
+    return await verify_supabase_jwt(credentials.credentials)
 
 
-def get_user_id(user: dict[str, Any] = Depends(get_current_user)) -> str:
-    uid = user.get("sub")
+async def get_user_id(user: dict[str, Any] = Depends(get_current_user)) -> str:
+    uid = user.get("sub") or user.get("id")
     if not uid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

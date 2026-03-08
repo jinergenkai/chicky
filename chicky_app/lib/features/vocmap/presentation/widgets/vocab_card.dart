@@ -148,7 +148,7 @@ class _BackSide extends StatelessWidget {
             const SizedBox(height: 8),
             ...definitions.take(2).map((def) {
               final pos = def['pos'] as String?;
-              final defs = def['definitions'] as List?;
+              final defText = def['en'] as String?;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Column(
@@ -163,9 +163,9 @@ class _BackSide extends StatelessWidget {
                           color: ChickyColors.textSecondary,
                         ),
                       ),
-                    if (defs != null && defs.isNotEmpty)
+                    if (defText != null && defText.isNotEmpty)
                       Text(
-                        '• ${defs.first}',
+                        '• $defText',
                         style: const TextStyle(fontSize: 15),
                       ),
                   ],

@@ -32,11 +32,10 @@ extension WordModelX on WordModel {
   }
 
   /// Returns the first English definition string.
+  /// Data format: [{"pos": "noun", "en": "...", "vi": null}]
   String? get primaryDefinition {
     if (definitions.isEmpty) return null;
-    final defs = definitions.first['definitions'] as List?;
-    if (defs == null || defs.isEmpty) return null;
-    return defs.first as String?;
+    return definitions.first['en'] as String?;
   }
 
   /// Returns a display-friendly CEFR badge label.

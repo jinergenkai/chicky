@@ -94,7 +94,7 @@ class WordDetailSheet extends ConsumerWidget {
                 const SizedBox(height: 12),
                 ...word.definitions.map((def) {
                   final pos = def['pos'] as String?;
-                  final defs = def['definitions'] as List? ?? [];
+                  final defText = def['en'] as String? ?? '';
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Column(
@@ -109,15 +109,14 @@ class WordDetailSheet extends ConsumerWidget {
                               color: ChickyColors.secondary,
                             ),
                           ),
-                        ...defs.take(3).toList().asMap().entries.map(
-                              (entry) => Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  '${entry.key + 1}. ${entry.value}',
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              ),
+                        if (defText.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              defText,
+                              style: const TextStyle(fontSize: 15),
                             ),
+                          ),
                       ],
                     ),
                   );
