@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:picovoice_flutter/picovoice_flutter.dart';
+import 'package:porcupine_flutter/porcupine.dart';
+import 'package:porcupine_flutter/porcupine_error.dart';
+import 'package:porcupine_flutter/porcupine_manager.dart';
 
 import '../../../core/config/env.dart';
 
@@ -8,55 +10,48 @@ enum WakeWordState { inactive, listening, detected, error }
 class WakeWordNotifier extends StateNotifier<WakeWordState> {
   WakeWordNotifier() : super(WakeWordState.inactive);
 
-  Picovoice? _picovoice;
+  PorcupineManager? _porcupineManager;
   void Function()? onWakeWordDetected;
 
-  Future<void> start({
-    required String porcupineKeywordPath,
-    required String rhinoContextPath,
-    void Function()? onDetected,
-  }) async {
+  Future<void> start({void Function()? onDetected}) async {
     if (state == WakeWordState.listening) return;
 
     onWakeWordDetected = onDetected;
 
     try {
-      _picovoice = await Picovoice.create(
-        accessKey: Env.picovoiceAccessKey,
-        keywordPath: porcupineKeywordPath,
-        wakeWordCallback: _onWakeWord,
-        contextPath: rhinoContextPath,
-        inferenceCallback: _onInference,
+      _porcupineManager = await PorcupineManager.fromBuiltInKeywords(
+        Env.picovoiceAccessKey,
+        [BuiltInKeyword.HEY_GOOGLE], // placeholder — replace with custom "Hey Chicky" model
+        _onWakeWord,
+        errorCallback: _onError,
       );
-      await _picovoice!.start();
+      await _porcupineManager!.start();
       state = WakeWordState.listening;
-    } catch (e) {
+    } on PorcupineException catch (_) {
       state = WakeWordState.error;
     }
   }
 
-  void _onWakeWord() {
+  void _onWakeWord(int keywordIndex) {
     state = WakeWordState.detected;
     onWakeWordDetected?.call();
-    // Reset back to listening after brief detection window
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) state = WakeWordState.listening;
     });
   }
 
-  void _onInference(Map<String, dynamic> inference) {
-    // Handle Rhino intent (optional natural language commands)
-    // e.g. "start review", "open chat" etc.
+  void _onError(PorcupineException error) {
+    state = WakeWordState.error;
   }
 
   Future<void> stop() async {
-    await _picovoice?.stop();
+    await _porcupineManager?.stop();
     state = WakeWordState.inactive;
   }
 
   @override
   void dispose() {
-    _picovoice?.delete();
+    _porcupineManager?.delete();
     super.dispose();
   }
 }

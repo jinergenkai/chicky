@@ -15,7 +15,6 @@ class AppTheme {
         onPrimary: ChickyColors.textOnPrimary,
         secondary: ChickyColors.secondary,
         onSecondary: ChickyColors.textOnPrimary,
-        background: ChickyColors.backgroundLight,
         surface: ChickyColors.surfaceLight,
         error: ChickyColors.error,
       ),
@@ -26,7 +25,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: ChickyColors.cardBackground,
         elevation: 2,
         shadowColor: ChickyColors.cardShadow,
@@ -68,7 +67,7 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: ChickyColors.primaryLight.withOpacity(0.2),
+        backgroundColor: ChickyColors.primaryLight.withValues(alpha: 0.2),
         selectedColor: ChickyColors.primary,
         labelStyle: const TextStyle(color: ChickyColors.textPrimary),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -80,7 +79,7 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      tabBarTheme: const TabBarTheme(
+      tabBarTheme: const TabBarThemeData(
         labelColor: ChickyColors.primary,
         unselectedLabelColor: ChickyColors.textSecondary,
         indicatorColor: ChickyColors.primary,
@@ -126,7 +125,6 @@ class AppTheme {
         primary: ChickyColors.primary,
         onPrimary: ChickyColors.textOnPrimary,
         secondary: ChickyColors.secondary,
-        background: ChickyColors.backgroundDark,
         surface: ChickyColors.surfaceDark,
         error: ChickyColors.error,
       ),
@@ -137,7 +135,7 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: const Color(0xFF2A2A2A),
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

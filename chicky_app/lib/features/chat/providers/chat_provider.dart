@@ -107,9 +107,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
     );
 
     // Build history for context (last 10 exchanges)
-    final history = state.messages
-        .where((m) => !m.isLocalOnly)
-        .takeLast(10)
+    final allMsgs = state.messages.where((m) => !m.isLocalOnly).toList();
+    final history = allMsgs
+        .skip((allMsgs.length - 10).clamp(0, allMsgs.length))
         .map((m) => {'role': m.role, 'content': m.content})
         .toList();
 

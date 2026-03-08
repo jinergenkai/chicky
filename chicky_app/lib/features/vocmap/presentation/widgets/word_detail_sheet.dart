@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/colors.dart';
 import '../../data/models/word_model.dart';
 import '../../data/repositories/vocab_repository.dart';
-import '../providers/vocmap_provider.dart';
+import '../../providers/vocmap_provider.dart';
 
 class WordDetailSheet extends ConsumerWidget {
   const WordDetailSheet({super.key, required this.word});

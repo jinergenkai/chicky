@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter:*)",
+      "Bash(cp:*)",
+      "Bash(flutter pub:*)",
+      "Bash(dart run:*)",
+      "Bash(pip install:*)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(supabase:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npx:*)",
+      "Bash(../chicky_api/.venv/Scripts/python:*)"
+    ]
+  }
+}

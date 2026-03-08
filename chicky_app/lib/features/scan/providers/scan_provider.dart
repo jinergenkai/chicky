@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/repositories/scan_repository.dart';
-import '../../../vocmap/data/models/word_model.dart';
+import '../../vocmap/data/models/word_model.dart';
 
 // ── Repository ────────────────────────────────────────────────────────────
 

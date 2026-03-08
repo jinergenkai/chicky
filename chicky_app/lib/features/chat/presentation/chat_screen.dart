@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/colors.dart';
+import '../data/models/chat_message_model.dart';
 import '../providers/chat_provider.dart';
 import '../providers/voice_provider.dart';
 import 'widgets/correction_card.dart';

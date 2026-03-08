@@ -100,7 +100,6 @@ String simpleLemmatize(String word) {
     'drew': 'draw',
     'drawn': 'draw',
     'draws': 'draw',
-    'knew': 'know',
     'flew': 'fly',
     'flown': 'fly',
     'flies': 'fly',
@@ -129,7 +128,6 @@ String simpleLemmatize(String word) {
     'bends': 'bend',
     'dealt': 'deal',
     'deals': 'deal',
-    'felt': 'feel',
     'slept': 'sleep',
     'sleeps': 'sleep',
     'woke': 'wake',
@@ -162,7 +160,6 @@ String simpleLemmatize(String word) {
     'drove': 'drive',
     'driven': 'drive',
     'drives': 'drive',
-    'wrote': 'write',
   };
 
   if (irregularVerbs.containsKey(w)) {

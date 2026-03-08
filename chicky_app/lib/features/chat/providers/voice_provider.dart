@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/audio_service.dart';
 import '../data/repositories/chat_repository.dart';
+import 'chat_provider.dart';
 
 enum VoiceState { idle, recording, processing, playing }
 

@@ -48,10 +48,12 @@ class SupabaseService {
     var query = client.from(table).select(columns);
     if (filters != null) {
       for (final entry in filters.entries) {
-        query = query.eq(entry.key, entry.value) as SupabaseQueryBuilder;
+        query = query.eq(entry.key, entry.value);
       }
     }
-    // Note: chained ordering/limiting done by caller via raw client for complex queries
+    if (limit != null) {
+      return await query.limit(limit);
+    }
     return await query;
   }
 
