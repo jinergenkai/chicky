@@ -1,0 +1,123 @@
+{
+  "domains": [
+    {
+      "id": "dom_daily_life",
+      "name": "Daily Life",
+      "parent_id": null,
+      "icon": "🏠",
+      "description": "Everyday activities, routines, and household vocabulary"
+    },
+    {
+      "id": "dom_food_drink",
+      "name": "Food & Drink",
+      "parent_id": "dom_daily_life",
+      "icon": "🍽️",
+      "description": "Food items, beverages, tastes, and eating vocabulary"
+    },
+    {
+      "id": "dom_cooking",
+      "name": "Cooking",
+      "parent_id": "dom_food_drink",
+      "icon": "👨‍🍳",
+      "description": "Cooking techniques, kitchen tools, and recipe vocabulary"
+    },
+    {
+      "id": "dom_baking",
+      "name": "Baking",
+      "parent_id": "dom_food_drink",
+      "icon": "🥐",
+      "description": "Baking ingredients, methods, and pastry vocabulary"
+    },
+    {
+      "id": "dom_technology",
+      "name": "Technology",
+      "parent_id": null,
+      "icon": "💻",
+      "description": "Computing, software, hardware, and digital technology"
+    },
+    {
+      "id": "dom_finance",
+      "name": "Finance",
+      "parent_id": null,
+      "icon": "💰",
+      "description": "Banking, investment, accounting, and financial markets"
+    },
+    {
+      "id": "dom_fintech",
+      "name": "Fintech",
+      "parent_id": "dom_finance",
+      "icon": "📱",
+      "description": "Financial technology, digital payments, and cryptocurrency"
+    },
+    {
+      "id": "dom_business",
+      "name": "Business",
+      "parent_id": null,
+      "icon": "💼",
+      "description": "Corporate vocabulary, management, marketing, and entrepreneurship"
+    },
+    {
+      "id": "dom_travel",
+      "name": "Travel",
+      "parent_id": null,
+      "icon": "✈️",
+      "description": "Transportation, accommodation, tourism, and travel planning"
+    },
+    {
+      "id": "dom_health",
+      "name": "Health",
+      "parent_id": null,
+      "icon": "🏥",
+      "description": "Medicine, wellness, anatomy, and healthcare vocabulary"
+    },
+    {
+      "id": "dom_education",
+      "name": "Education",
+      "parent_id": null,
+      "icon": "📚",
+      "description": "Academic vocabulary, learning, teaching, and school life"
+    },
+    {
+      "id": "dom_sports",
+      "name": "Sports",
+      "parent_id": null,
+      "icon": "⚽",
+      "description": "Sports, athletics, fitness, and outdoor activities"
+    },
+    {
+      "id": "dom_arts",
+      "name": "Arts",
+      "parent_id": null,
+      "icon": "🎨",
+      "description": "Visual arts, music, literature, theatre, and creative vocabulary"
+    },
+    {
+      "id": "dom_science",
+      "name": "Science",
+      "parent_id": null,
+      "icon": "🔬",
+      "description": "Natural sciences, research, experiments, and scientific terminology"
+    },
+    {
+      "id": "dom_environment",
+      "name": "Environment",
+      "parent_id": "dom_science",
+      "icon": "🌿",
+      "description": "Nature, ecology, climate, and environmental issues"
+    },
+    {
+      "id": "dom_social",
+      "name": "Social & Relationships",
+      "parent_id": "dom_daily_life",
+      "icon": "👥",
+      "description": "Family, friendship, social situations, and interpersonal vocabulary"
+    },
+    {
+      "id": "dom_emotions",
+      "name": "Emotions & Psychology",
+      "parent_id": null,
+      "icon": "❤️",
+      "description": "Feelings, mental states, personality, and psychological vocabulary"
+    }
+  ]
+}

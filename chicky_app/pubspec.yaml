@@ -1,0 +1,42 @@
+name: chicky_app
+description: Chicky - AI English Companion App
+version: 1.0.0+1
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  riverpod_annotation: ^2.6.1
+  supabase_flutter: ^2.8.4
+  dio: ^5.7.0
+  web_socket_channel: ^3.0.1
+  picovoice_flutter: ^3.0.6
+  record: ^5.2.0
+  just_audio: ^0.9.42
+  flutter_card_swiper: ^7.0.1
+  shimmer: ^3.0.0
+  hive_flutter: ^1.1.0
+  json_annotation: ^4.9.0
+  freezed_annotation: ^2.4.4
+  go_router: ^14.6.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.13
+  freezed: ^2.5.7
+  json_serializable: ^6.9.2
+  hive_generator: ^2.0.1
+  riverpod_generator: ^2.6.1
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/audio/
+    - .env
