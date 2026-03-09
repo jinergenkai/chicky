@@ -5,13 +5,13 @@ import 'colors.dart';
 class AppTheme {
   AppTheme._();
 
-  static ThemeData get lightTheme {
+  static ThemeData getLightTheme(Color primaryColor) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: ChickyColors.primary,
+        seedColor: primaryColor,
         brightness: Brightness.light,
-        primary: ChickyColors.primary,
+        primary: primaryColor,
         onPrimary: ChickyColors.textOnPrimary,
         secondary: ChickyColors.secondary,
         onSecondary: ChickyColors.textOnPrimary,
@@ -34,7 +34,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: ChickyColors.primary,
+          backgroundColor: primaryColor,
           foregroundColor: ChickyColors.textOnPrimary,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
@@ -43,8 +43,8 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: ChickyColors.primary,
-          side: const BorderSide(color: ChickyColors.primary),
+          foregroundColor: primaryColor,
+          side: BorderSide(color: primaryColor),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         ),
@@ -62,31 +62,31 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: ChickyColors.primary, width: 2),
+          borderSide: BorderSide(color: primaryColor, width: 2),
         ),
         labelStyle: const TextStyle(color: ChickyColors.textSecondary),
         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: ChickyColors.primaryLight.withValues(alpha: 0.2),
-        selectedColor: ChickyColors.primary,
+        backgroundColor: primaryColor.withValues(alpha: 0.2),
+        selectedColor: primaryColor,
         labelStyle: const TextStyle(color: ChickyColors.textPrimary),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.white,
-        selectedItemColor: ChickyColors.primary,
+        selectedItemColor: primaryColor,
         unselectedItemColor: ChickyColors.textHint,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
       ),
-      tabBarTheme: const TabBarThemeData(
-        labelColor: ChickyColors.primary,
+      tabBarTheme: TabBarThemeData(
+        labelColor: primaryColor,
         unselectedLabelColor: ChickyColors.textSecondary,
-        indicatorColor: ChickyColors.primary,
+        indicatorColor: primaryColor,
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
-        backgroundColor: ChickyColors.primary,
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: primaryColor,
         foregroundColor: ChickyColors.textOnPrimary,
       ),
       textTheme: const TextTheme(
@@ -117,13 +117,13 @@ class AppTheme {
     );
   }
 
-  static ThemeData get darkTheme {
+  static ThemeData getDarkTheme(Color primaryColor) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: ChickyColors.primary,
+        seedColor: primaryColor,
         brightness: Brightness.dark,
-        primary: ChickyColors.primary,
+        primary: primaryColor,
         onPrimary: ChickyColors.textOnPrimary,
         secondary: ChickyColors.secondary,
         surface: ChickyColors.surfaceDark,
@@ -141,9 +141,9 @@ class AppTheme {
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: Color(0xFF2A2A2A),
-        selectedItemColor: ChickyColors.primary,
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: const Color(0xFF2A2A2A),
+        selectedItemColor: primaryColor,
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
       ),

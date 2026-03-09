@@ -23,14 +23,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   bool _isLoading = false;
 
   final List<Map<String, String>> _avatarOptions = [
-    {'id': '4', 'path': 'assets/avatar/4.png', 'label': 'Buddy'},
-    {'id': '6', 'path': 'assets/avatar/6.png', 'label': 'Smarty'},
-    {'id': 'a', 'path': 'assets/avatar/a.png', 'label': 'Friendly'},
-    {'id': 'c', 'path': 'assets/avatar/c.png', 'label': 'Cool'},
-    {'id': 'cat', 'path': 'assets/avatar/cat.png', 'label': 'Kitty'},
-    {'id': 'chuoi', 'path': 'assets/avatar/chuoi.png', 'label': 'Banana'},
-    {'id': 'dog', 'path': 'assets/avatar/dog.png', 'label': 'Doggy'},
-    {'id': 'luoi', 'path': 'assets/avatar/luoi.png', 'label': 'Lazy'}
+    {'id': 'chicky', 'path': 'assets/avatar/chicky.png', 'label': 'Chicky'},
+    {'id': 'foxy', 'path': 'assets/avatar/foxy.png', 'label': 'Foxy'},
+    {'id': 'black', 'path': 'assets/avatar/black.png', 'label': 'Blacky'},
+    {'id': 'catchy', 'path': 'assets/avatar/catchy.png', 'label': 'Catchy'},
+    {'id': 'cozy', 'path': 'assets/avatar/cozy.png', 'label': 'Cozy'},
+    {'id': 'buxy', 'path': 'assets/avatar/buxy.png', 'label': 'Buxy'},
+    {'id': 'moxy', 'path': 'assets/avatar/moxy.png', 'label': 'Moxy'},
+    {'id': 'picky', 'path': 'assets/avatar/picky.png', 'label': 'Picky'},
   ];
 
   @override

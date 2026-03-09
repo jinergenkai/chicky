@@ -7,6 +7,7 @@ import '../../../shared/models/app_user.dart';
 import '../../../shared/widgets/chicky_widgets.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../vocmap/providers/vocmap_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserScreen extends ConsumerStatefulWidget {
   const UserScreen({super.key});
@@ -33,10 +34,15 @@ class _UserScreenState extends ConsumerState<UserScreen> with TickerProviderStat
   late Animation<double> _actionsFadeAnim;
   late Animation<double> _contentFadeAnim;
 
-  // List of available avatars in assets/avatar/
-  final List<String> _avatars = [
-    '4.png', '6.png', 'a.png', 'c.png', 
-    'cat.png', 'chuoi.png', 'dog.png', 'luoi.png'
+  final List<Map<String, String>> _avatarOptions = [
+    {'id': 'chicky', 'path': 'assets/avatar/chicky.png', 'label': 'Chicky'},
+    {'id': 'foxy', 'path': 'assets/avatar/foxy.png', 'label': 'Foxy'},
+    {'id': 'black', 'path': 'assets/avatar/black.png', 'label': 'Blacky'},
+    {'id': 'catchy', 'path': 'assets/avatar/catchy.png', 'label': 'Catchy'},
+    {'id': 'cozy', 'path': 'assets/avatar/cozy.png', 'label': 'Cozy'},
+    {'id': 'buxy', 'path': 'assets/avatar/buxy.png', 'label': 'Buxy'},
+    {'id': 'moxy', 'path': 'assets/avatar/moxy.png', 'label': 'Moxy'},
+    {'id': 'picky', 'path': 'assets/avatar/picky.png', 'label': 'Picky'},
   ];
 
   @override
@@ -82,13 +88,127 @@ class _UserScreenState extends ConsumerState<UserScreen> with TickerProviderStat
     super.dispose();
   }
 
-  String _getDeterministicAvatar(String userId) {
-    int hash = 0;
-    for (int i = 0; i < userId.length; i++) {
-        hash = userId.codeUnitAt(i) + ((hash << 5) - hash);
-    }
-    final index = hash.abs() % _avatars.length;
-    return 'assets/avatar/${_avatars[index]}';
+
+
+  void _showAvatarPicker(BuildContext context, String currentAvatarVal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      builder: (ctx) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          maxChildSize: 0.9,
+          minChildSize: 0.4,
+          expand: false,
+          builder: (_, scrollController) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Choose Your Avatar',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: GridView.builder(
+                      controller: scrollController,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 3,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 24,
+                        childAspectRatio: 0.8,
+                      ),
+                      itemCount: _avatarOptions.length,
+                      itemBuilder: (context, index) {
+                        final option = _avatarOptions[index];
+                        final isSelected = option['id'] == currentAvatarVal;
+
+                        return GestureDetector(
+                          onTap: () async {
+                            Navigator.pop(ctx);
+                            final session = ref.read(authStateProvider).valueOrNull?.session;
+                            if (session != null) {
+                              try {
+                                await Supabase.instance.client.auth.updateUser(
+                                  UserAttributes(
+                                    data: {
+                                      'avatar_url': option['id'],
+                                    },
+                                  ),
+                                );
+                                // Ensure provider catches the new session to redraw
+                                ref.invalidate(currentUserProvider);
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Failed to update avatar')),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: isSelected ? Border.all(
+                                      color: Theme.of(context).colorScheme.primary, 
+                                      width: 4
+                                    ) : null,
+                                    boxShadow: isSelected ? [
+                                      BoxShadow(
+                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                                        blurRadius: 12,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ] : null,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(100),
+                                    child: Image.asset(option['path']!, fit: BoxFit.cover),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                option['label']!,
+                                style: TextStyle(
+                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade700,
+                                ),
+                              )
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -97,7 +217,15 @@ class _UserScreenState extends ConsumerState<UserScreen> with TickerProviderStat
     final appUser = supabaseUser != null ? AppUser.fromSupabaseUser(supabaseUser) : null;
     final vocabStatsAsync = ref.watch(vocabStatsProvider);
 
-    final avatarPath = appUser != null ? _getDeterministicAvatar(appUser.id) : 'assets/avatar/dog.png';
+    // Get avatar from metadata, fallback to deterministic
+    final metadataAvatar = supabaseUser?.userMetadata?['avatar_url'] as String?;
+    final avatarId = metadataAvatar ?? 'dog';
+    // Find the full path based on ID inside _avatarOptions
+    final avatarPath = _avatarOptions.firstWhere(
+      (opt) => opt['id'] == avatarId || opt['path']!.contains(avatarId), 
+      orElse: () => _avatarOptions[0]
+    )['path']!;
+
     final userName = appUser?.displayName?.isNotEmpty == true ? appUser!.displayName! : 'Learner';
 
     return Scaffold(
@@ -154,25 +282,61 @@ class _UserScreenState extends ConsumerState<UserScreen> with TickerProviderStat
                                     child: AnimatedScale(
                                       scale: _avatarScale,
                                       duration: const Duration(milliseconds: 100),
-                                      child: Container(
-                                        width: 140,
-                                        height: 140,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: ChickyColors.primary.withOpacity(0.15),
-                                              blurRadius: 32,
-                                              offset: const Offset(0, 10),
+                                      child: GestureDetector(
+                                        onTap: () => _showAvatarPicker(context, avatarId),
+                                        child: Container(
+                                          width: 140,
+                                          height: 140,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: Colors.white,
+                                              width: 4,
                                             ),
-                                          ],
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(70),
-                                          child: Image.asset(
-                                            avatarPath,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (_, __, ___) => Image.asset('assets/avatar/dog.png', fit: BoxFit.cover),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+                                                blurRadius: 32,
+                                                offset: const Offset(0, 10),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Stack(
+                                            children: [
+                                              ClipRRect(
+                                                borderRadius: BorderRadius.circular(70),
+                                                child: Image.asset(
+                                                  avatarPath,
+                                                  fit: BoxFit.cover,
+                                                  width: double.infinity,
+                                                  height: double.infinity,
+                                                  errorBuilder: (_, __, ___) => Image.asset('assets/avatar/black.png', fit: BoxFit.cover),
+                                                ),
+                                              ),
+                                              Positioned(
+                                                right: 0,
+                                                bottom: 0,
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black.withValues(alpha: 0.1),
+                                                        blurRadius: 8,
+                                                        offset: const Offset(0, 2),
+                                                      )
+                                                    ]
+                                                  ),
+                                                  child: Icon(
+                                                    Icons.edit,
+                                                    size: 16,
+                                                    color: Theme.of(context).colorScheme.primary,
+                                                  ),
+                                                ),
+                                              )
+                                            ],
                                           ),
                                         ),
                                       ),
@@ -232,7 +396,7 @@ class _UserScreenState extends ConsumerState<UserScreen> with TickerProviderStat
                       children: [
                         Row(
                           children: [
-                            Icon(LucideIcons.barChart, color: ChickyColors.primary, size: 24),
+                            Icon(LucideIcons.barChart, color: Theme.of(context).colorScheme.primary, size: 24),
                             const SizedBox(width: 10),
                             const Text(
                               'Dashboard',

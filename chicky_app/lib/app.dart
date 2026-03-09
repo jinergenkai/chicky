@@ -14,6 +14,7 @@ import 'features/chat/presentation/chat_screen.dart';
 import 'features/scan/presentation/scan_screen.dart';
 import 'features/vocmap/presentation/learn_session_screen.dart';
 import 'features/vocmap/presentation/vocmap_screen.dart';
+import 'core/theme/theme_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -250,12 +251,13 @@ class ChickyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    final themeState = ref.watch(themeProvider);
 
     return MaterialApp.router(
       title: 'Chicky',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      theme: AppTheme.getLightTheme(themeState.primaryColor),
+      darkTheme: AppTheme.getDarkTheme(themeState.primaryColor),
+      themeMode: themeState.themeMode,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

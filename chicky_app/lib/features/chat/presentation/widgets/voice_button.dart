@@ -30,12 +30,30 @@ class VoiceButton extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         GestureDetector(
-          onLongPressStart: (_) => notifier.startRecording(),
-          onLongPressEnd: (_) =>
-              notifier.stopRecordingAndSend(sessionId),
-          onTap: voiceState == VoiceState.playing
-              ? notifier.stopPlayback
-              : null,
+          onTap: () {
+            switch (voiceState) {
+              case VoiceState.idle:
+                // Tap to start recording
+                notifier.startRecording();
+              case VoiceState.recording:
+                // Tap again to stop and send
+                notifier.stopRecordingAndSend(sessionId);
+              case VoiceState.playing:
+                notifier.stopPlayback();
+              case VoiceState.processing:
+                break; // ignore taps while processing
+            }
+          },
+          onLongPressStart: (_) {
+            if (voiceState == VoiceState.idle) {
+              notifier.startRecording();
+            }
+          },
+          onLongPressEnd: (_) {
+            if (voiceState == VoiceState.recording) {
+              notifier.stopRecordingAndSend(sessionId);
+            }
+          },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: voiceState == VoiceState.recording ? 80 : 64,
@@ -45,7 +63,7 @@ class VoiceButton extends ConsumerWidget {
               color: _buttonColor,
               boxShadow: [
                 BoxShadow(
-                  color: _buttonColor.withOpacity(0.4),
+                  color: _buttonColor.withValues(alpha: 0.4),
                   blurRadius: voiceState == VoiceState.recording ? 20 : 8,
                   spreadRadius: voiceState == VoiceState.recording ? 4 : 0,
                 ),
@@ -60,9 +78,7 @@ class VoiceButton extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          voiceState == VoiceState.recording
-              ? 'Release to send'
-              : 'Hold to speak',
+          _hintText,
           style: const TextStyle(
             fontSize: 12,
             color: ChickyColors.textHint,
@@ -78,6 +94,15 @@ class VoiceButton extends ConsumerWidget {
       VoiceState.recording => 'Recording...',
       VoiceState.processing => 'Processing...',
       VoiceState.playing => 'Playing response',
+    };
+  }
+
+  String get _hintText {
+    return switch (voiceState) {
+      VoiceState.idle => 'Tap or hold to speak',
+      VoiceState.recording => 'Tap to send',
+      VoiceState.processing => 'Please wait...',
+      VoiceState.playing => 'Tap to stop',
     };
   }
 

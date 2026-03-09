@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/colors.dart';
 
 // ═══════════════════════════════════════════════════════════════════════
 //  Chicky Design System — Reusable Widgets
@@ -36,10 +35,10 @@ class ChickyGradientButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gradientColors = colors ??
-        [
-          ChickyColors.primary,
-          ChickyColors.primaryDark,
-        ];
+      [
+        Theme.of(context).colorScheme.primary,
+        Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+      ];
 
     return Container(
       height: height,
@@ -128,19 +127,20 @@ class ChickyBackButton extends StatelessWidget {
 class ChickyProgressBar extends StatelessWidget {
   final String label;
   final double value;
-  final Color color;
+  final Color? color;
   final double height;
 
   const ChickyProgressBar({
     super.key,
     required this.label,
     required this.value,
-    this.color = ChickyColors.success,
+    this.color,
     this.height = 12,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = color ?? Theme.of(context).primaryColor;
     final percentage = (value * 100).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +161,7 @@ class ChickyProgressBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: color,
+                color: effectiveColor,
               ),
             ),
           ],
@@ -172,7 +172,7 @@ class ChickyProgressBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: color.withOpacity(0.2),
+                color: effectiveColor.withValues(alpha: 0.2),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -184,7 +184,7 @@ class ChickyProgressBar extends StatelessWidget {
               value: value,
               minHeight: height,
               backgroundColor: Colors.grey.shade100,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
+              valueColor: AlwaysStoppedAnimation<Color>(effectiveColor),
             ),
           ),
         ),
@@ -297,19 +297,21 @@ class ChickyStatsCard extends StatelessWidget {
 class ChickyPageDots extends StatelessWidget {
   final int count;
   final int currentIndex;
-  final Color activeColor;
+  final Color? activeColor;
   final Color inactiveColor;
 
   const ChickyPageDots({
     super.key,
     required this.count,
     required this.currentIndex,
-    this.activeColor = ChickyColors.primary,
+    this.activeColor,
     Color? inactiveColor,
   }) : inactiveColor = inactiveColor ?? const Color(0xFFE0E0E0);
 
   @override
   Widget build(BuildContext context) {
+    final effectiveActiveColor = activeColor ?? Theme.of(context).colorScheme.primary;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: List.generate(
@@ -320,7 +322,7 @@ class ChickyPageDots extends StatelessWidget {
           height: 8,
           width: currentIndex == index ? 24 : 8,
           decoration: BoxDecoration(
-            color: currentIndex == index ? activeColor : inactiveColor,
+            color: currentIndex == index ? effectiveActiveColor : inactiveColor,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -386,7 +388,8 @@ PreferredSizeWidget chickyAppBar(
 ///   onTap: () => ...,
 /// )
 /// ```
-Widget chickyAppBarAction({
+  Widget chickyAppBarAction(
+  BuildContext context, {
   required IconData icon,
   required String label,
   required VoidCallback onTap,
@@ -394,8 +397,8 @@ Widget chickyAppBarAction({
 }) {
   final gradientColors = colors ??
       [
-        ChickyColors.primary,
-        ChickyColors.primaryDark,
+        Theme.of(context).colorScheme.primary,
+        Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
       ];
 
   return Container(

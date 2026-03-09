@@ -60,15 +60,15 @@ class _FrontSide extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: ChickyColors.primary.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               word.cefrLevel!.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: ChickyColors.primaryDark,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -144,7 +144,7 @@ class _BackSide extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .labelLarge
-                  ?.copyWith(color: ChickyColors.primary),
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 8),
             ...definitions.take(2).map((def) {
@@ -182,7 +182,7 @@ class _BackSide extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .labelLarge
-                  ?.copyWith(color: ChickyColors.primary),
+                  ?.copyWith(color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 4),
             Container(
@@ -190,7 +190,7 @@ class _BackSide extends StatelessWidget {
               decoration: BoxDecoration(
                 color: ChickyColors.backgroundLight,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: ChickyColors.primaryLight),
+                border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
               ),
               child: Text(
                 '"${examples.first}"',

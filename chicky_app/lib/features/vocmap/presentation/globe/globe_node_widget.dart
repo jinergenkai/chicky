@@ -98,14 +98,14 @@ class GlobeNodeWidget extends StatelessWidget {
     final m = node.morph;
     final data = node.graphNode.data;
 
-    final width = _l(90, 300, m);
-    final hPad = _l(12, 28, m);
-    final vPad = _l(6, 32, m);
-    final borderR = _l(40, 20, m);
-    final wordSz = _l(12, 32, m);
-    final detailA = _ss(0.45, 0.8, m);
+    final width = _l(80, 220, m);
+    final hPad = _l(10, 20, m);
+    final vPad = _l(5, 18, m);
+    final borderR = _l(30, 18, m);
+    final wordSz = _l(11, 22, m);
+    final detailA = _ss(0.2, 0.55, m);
 
-    final Gradient? gradient = m > 0.3
+    final Gradient? gradient = m > 0.15
         ? const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -148,56 +148,56 @@ class GlobeNodeWidget extends StatelessWidget {
             style: TextStyle(
               color: globeText,
               fontSize: wordSz,
-              fontWeight: m > 0.4 ? FontWeight.w700 : FontWeight.w600,
-              fontFamily: m > 0.5 ? 'serif' : null,
-              letterSpacing: m > 0.4 ? 0.5 : 0,
+              fontWeight: m > 0.25 ? FontWeight.w700 : FontWeight.w600,
+              fontFamily: m > 0.3 ? 'serif' : null,
+              letterSpacing: m > 0.25 ? 0.5 : 0,
             ),
           ),
-          if (m < 0.25 && data.primaryPos != null)
+          if (m < 0.15 && data.primaryPos != null)
             Text(data.primaryPos!.toUpperCase(),
                 style: const TextStyle(
                     fontSize: 9, color: globeTextMuted, letterSpacing: 1.0)),
-          if (m > 0.3)
+          if (m > 0.15)
             Opacity(
               opacity: detailA,
               child: Padding(
-                padding: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.only(top: 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (data.hasIpa) ...[
                       Text('/${data.ipa}/',
                           style: const TextStyle(
-                              fontSize: 15,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: globeAccentSoft,
                               fontStyle: FontStyle.italic)),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                     ],
                     if (data.primaryPos != null) ...[
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 9, vertical: 3),
+                            horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
                           color: globeAccent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(data.primaryPos!.toUpperCase(),
                             style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 9,
                                 fontWeight: FontWeight.w700,
                                 color: globeAccentSoft,
-                                letterSpacing: 1.5)),
+                                letterSpacing: 1.2)),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
                     ],
                     if (data.primaryDefinition != null)
                       Text(data.primaryDefinition!,
-                          maxLines: 4,
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              fontSize: 14.5,
-                              height: 1.6,
+                              fontSize: 12,
+                              height: 1.5,
                               color: globeTextDim)),
                   ],
                 ),

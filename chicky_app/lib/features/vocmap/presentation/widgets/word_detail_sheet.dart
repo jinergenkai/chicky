@@ -76,9 +76,9 @@ class WordDetailSheet extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Chip(
                   label: Text(word.cefrBadge),
-                  backgroundColor: ChickyColors.primary.withOpacity(0.15),
+                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                   labelStyle:
-                      const TextStyle(color: ChickyColors.primaryDark),
+                      TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
               ],
               const Divider(height: 32),
@@ -89,7 +89,7 @@ class WordDetailSheet extends ConsumerWidget {
                   style: Theme.of(context)
                       .textTheme
                       .labelLarge
-                      ?.copyWith(color: ChickyColors.primary),
+                      ?.copyWith(color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 12),
                 ...word.definitions.map((def) {
@@ -129,7 +129,7 @@ class WordDetailSheet extends ConsumerWidget {
                   style: Theme.of(context)
                       .textTheme
                       .labelLarge
-                      ?.copyWith(color: ChickyColors.primary),
+                      ?.copyWith(color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 8),
                 ...word.exampleSentences.take(3).map(
@@ -141,7 +141,7 @@ class WordDetailSheet extends ConsumerWidget {
                             color: ChickyColors.backgroundLight,
                             borderRadius: BorderRadius.circular(8),
                             border:
-                                Border.all(color: ChickyColors.primaryLight),
+                                Border.all(color: Theme.of(context).colorScheme.primary),
                           ),
                           child: Text(
                             '"$ex"',

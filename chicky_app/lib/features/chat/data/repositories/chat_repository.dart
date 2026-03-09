@@ -104,6 +104,24 @@ class ChatRepository {
     return ChatMessageModel.fromJson(data);
   }
 
+  // ── Learning words ────────────────────────────────────────────────────────
+
+  /// Fetches words the user is currently learning (status='learning').
+  Future<List<String>> getLearningWords({int limit = 30}) async {
+    final uid = _db.currentUserId;
+    if (uid == null) return [];
+    final data = await _db.client
+        .from('user_vocabulary')
+        .select('word:words(word)')
+        .eq('user_id', uid)
+        .eq('status', 'learning')
+        .limit(limit);
+    return (data as List)
+        .map((e) => (e['word'] as Map<String, dynamic>?)?['word'] as String?)
+        .whereType<String>()
+        .toList();
+  }
+
   // ── API: Text chat ────────────────────────────────────────────────────────
 
   /// Sends a text message and returns the assistant's response stream.
@@ -113,6 +131,7 @@ class ChatRepository {
     required String mode,
     String? scenarioId,
     List<Map<String, dynamic>> history = const [],
+    List<String> learningWords = const [],
   }) async* {
     final response = await _api.dio.post<ResponseBody>(
       '/chat/text',
@@ -122,6 +141,7 @@ class ChatRepository {
         'mode': mode,
         'scenario_id': scenarioId,
         'history': history,
+        'learning_words': learningWords,
       },
       options: Options(responseType: ResponseType.stream),
     );

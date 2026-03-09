@@ -7,6 +7,7 @@ import '../../../shared/widgets/chicky_widgets.dart';
 import '../data/models/chat_message_model.dart';
 import '../providers/chat_provider.dart';
 import '../providers/voice_provider.dart';
+import '../providers/wakeword_provider.dart';
 import 'widgets/correction_card.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/mode_selector.dart';

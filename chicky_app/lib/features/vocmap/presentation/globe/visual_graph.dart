@@ -112,7 +112,7 @@ class VisualGraph {
   ) {
     if (screenW == 0) return;
     final cx = screenW / 2, cy = screenH / 2;
-    const perspective = 600.0;
+    const perspective = 800.0;
 
     for (final vn in _visual.values) {
       // Rotate Y
@@ -126,13 +126,13 @@ class VisualGraph {
       vn.screenX = cx + x1 * sphereRadius * scale3d;
       vn.screenY = cy - y2 * sphereRadius * scale3d;
       vn.depth = z2;
-      // Morph – sharp falloff so only the very center word expands
+      // Morph – tight zone so only the dead-center word expands
       final dist = math.sqrt(
         math.pow(vn.screenX - cx, 2) + math.pow(vn.screenY - cy, 2),
       );
-      final prox = (1.0 - (dist / 100.0).clamp(0.0, 1.0));
-      final sharpProx = prox * prox * prox; // cubic falloff – chips stay small
-      final depthF = _smoothstep(0.0, 0.85, z2);
+      final prox = (1.0 - (dist / 80.0).clamp(0.0, 1.0));
+      final sharpProx = prox * prox; // quadratic falloff
+      final depthF = _smoothstep(0.1, 0.8, z2); // must be clearly in front
       vn.morph = (sharpProx * depthF).clamp(0.0, 1.0);
     }
   }

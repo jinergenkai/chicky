@@ -41,7 +41,7 @@ class _WordWebScreenState extends ConsumerState<WordWebScreen>
   double _animToRotX = 0, _animToRotY = 0;
   Duration? _animStart;
   String? _pendingFocusId; // word to focus after snap completes
-  static const int _animMs = 500;
+  static const int _animMs = 300;
 
   // Auto-snap
   bool _wasMoving = false;
@@ -49,7 +49,7 @@ class _WordWebScreenState extends ConsumerState<WordWebScreen>
 
   // ── Screen ──────────────────────────────────────────────────────────────────
   double _screenW = 0, _screenH = 0;
-  double get _sphereRadius => math.min(_screenW, _screenH) * 0.40;
+  double get _sphereRadius => math.min(_screenW, _screenH) * 0.50;
 
   // ── Ticker / background ────────────────────────────────────────────────────
   late final Ticker _ticker;
@@ -161,10 +161,10 @@ class _WordWebScreenState extends ConsumerState<WordWebScreen>
         }
       }
     } else if (!_isDragging) {
-      _velX *= 0.94;
-      _velY *= 0.94;
-      if (_velX.abs() < 0.0003) _velX = 0;
-      if (_velY.abs() < 0.0003) _velY = 0;
+      _velX *= 0.82;
+      _velY *= 0.82;
+      if (_velX.abs() < 0.001) _velX = 0;
+      if (_velY.abs() < 0.001) _velY = 0;
       _rotX += _velX;
       _rotY += _velY;
     }
@@ -296,9 +296,17 @@ class _WordWebScreenState extends ConsumerState<WordWebScreen>
     if (_recentVels.isEmpty) return;
     final avg =
         _recentVels.reduce((a, b) => a + b) / _recentVels.length.toDouble();
-    const s = 0.007 * 1.3;
-    _velY = (-avg.dx * s).clamp(-0.08, 0.08);
-    _velX = (avg.dy * s).clamp(-0.08, 0.08);
+    const s = 0.007 * 0.8;
+    var vy = (-avg.dx * s).clamp(-0.06, 0.06);
+    var vx = (avg.dy * s).clamp(-0.06, 0.06);
+    // Suppress minor axis to prevent diagonal drift
+    if (vx.abs() > vy.abs() * 2) {
+      vy *= 0.3;
+    } else if (vy.abs() > vx.abs() * 2) {
+      vx *= 0.3;
+    }
+    _velY = vy;
+    _velX = vx;
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
@@ -351,8 +359,8 @@ class _WordWebScreenState extends ConsumerState<WordWebScreen>
               if (opacity < 0.01) return const SizedBox.shrink();
 
               final scale = _visual.displayScale(vn);
-              final estW = 90.0 + 210.0 * vn.morph;
-              final estH = vn.morph > 0.3 ? 200.0 : 34.0;
+              final estW = 80.0 + 140.0 * vn.morph;
+              final estH = vn.morph > 0.15 ? 160.0 : 30.0;
 
               return Positioned(
                 left: vn.screenX - estW / 2,

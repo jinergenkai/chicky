@@ -153,8 +153,8 @@ class _NavBarItem extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    ChickyColors.primary,
-                    ChickyColors.primaryDark,
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                   ],
                 )
               : null,
@@ -162,7 +162,7 @@ class _NavBarItem extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: ChickyColors.primary.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 3),
                   ),

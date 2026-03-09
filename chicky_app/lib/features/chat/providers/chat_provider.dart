@@ -12,7 +12,7 @@ final chatRepositoryProvider = Provider<ChatRepository>(
 
 // ── Chat mode ─────────────────────────────────────────────────────────────
 
-enum ChatMode { buddy, roleplay }
+enum ChatMode { buddy, roleplay, vocabulary }
 
 final chatModeProvider = StateProvider<ChatMode>((ref) => ChatMode.buddy);
 
@@ -61,12 +61,18 @@ class ChatNotifier extends StateNotifier<ChatState> {
   final Ref _ref;
   ChatRepository get _repo => _ref.read(chatRepositoryProvider);
 
+  static String modeToString(ChatMode mode) {
+    return switch (mode) {
+      ChatMode.buddy => 'buddy',
+      ChatMode.roleplay => 'roleplay',
+      ChatMode.vocabulary => 'vocabulary',
+    };
+  }
+
   Future<void> initSession({ChatMode? mode}) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final modeStr = (mode ?? _ref.read(chatModeProvider)) == ChatMode.buddy
-          ? 'buddy'
-          : 'roleplay';
+      final modeStr = modeToString(mode ?? _ref.read(chatModeProvider));
 
       final session = await _repo.createSession(mode: modeStr);
       _ref.read(activeSessionProvider.notifier).state = session;
@@ -113,7 +119,14 @@ class ChatNotifier extends StateNotifier<ChatState> {
         .map((m) => {'role': m.role, 'content': m.content})
         .toList();
 
-    final mode = _ref.read(chatModeProvider) == ChatMode.buddy ? 'buddy' : 'roleplay';
+    final currentMode = _ref.read(chatModeProvider);
+    final mode = modeToString(currentMode);
+
+    // Fetch learning words for vocabulary mode
+    final learningWords = currentMode == ChatMode.vocabulary
+        ? await _repo.getLearningWords()
+        : <String>[];
+
     final buffer = StringBuffer();
 
     try {
@@ -122,6 +135,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         message: content,
         mode: mode,
         history: history,
+        learningWords: learningWords,
       )) {
         buffer.write(chunk);
         state = state.copyWith(streamingContent: buffer.toString());
