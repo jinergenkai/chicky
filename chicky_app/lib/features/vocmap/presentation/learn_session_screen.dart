@@ -5,8 +5,10 @@ import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/colors.dart';
+import '../../../shared/widgets/chicky_widgets.dart';
 import '../data/models/learn_card.dart';
 import '../providers/learn_session_provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class LearnSessionScreen extends ConsumerStatefulWidget {
   const LearnSessionScreen({super.key});
@@ -46,23 +48,12 @@ class _LearnSessionScreenState extends ConsumerState<LearnSessionScreen> {
 
     return Scaffold(
       backgroundColor: ChickyColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: _close,
-        ),
+      appBar: chickyAppBar(
+        context,
         title: state.phase == LearnPhase.learning
-            ? Text(
-                '${_currentIndex + 1} / ${state.cards.length}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              )
-            : const Text('Learn Words'),
-        centerTitle: true,
+            ? '${_currentIndex + 1} / ${state.cards.length}'
+            : 'Learn Words',
+        onBack: _close,
       ),
       body: switch (state.phase) {
         LearnPhase.loading => const Center(child: CircularProgressIndicator()),
@@ -156,8 +147,8 @@ class _LearningView extends StatelessWidget {
             controller: controller,
             cardsCount: cards.length,
             numberOfCardsDisplayed: min(3, cards.length),
-            backCardOffset: const Offset(0, 40),
-            scale: 0.95,
+            backCardOffset: const Offset(0, 30),
+            scale: 0.9,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             onSwipe: (previousIndex, currentIdx, direction) {
               final dirStr = direction == CardSwiperDirection.right
@@ -195,37 +186,68 @@ class _LearningView extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  label: const Text('Learn it'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: ChickyColors.vocabLearning,
-                    side: const BorderSide(color: ChickyColors.vocabLearning),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  onTap: () => controller.swipe(CardSwiperDirection.left),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: ChickyColors.vocabLearning.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: ChickyColors.vocabLearning.withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(LucideIcons.arrowLeft, color: ChickyColors.vocabLearning, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Learn it', 
+                          style: TextStyle(
+                            color: ChickyColors.vocabLearning, 
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          )
+                        ),
+                      ],
                     ),
                   ),
-                  onPressed: () =>
-                      controller.swipe(CardSwiperDirection.left),
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('Know it'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ChickyColors.vocabKnown,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 2,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  onTap: () => controller.swipe(CardSwiperDirection.right),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: ChickyColors.vocabKnown,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ChickyColors.vocabKnown.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Know it', 
+                          style: TextStyle(
+                            color: Colors.white, 
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          )
+                        ),
+                        SizedBox(width: 8),
+                        Icon(LucideIcons.arrowRight, color: Colors.white, size: 20),
+                      ],
                     ),
                   ),
-                  onPressed: () =>
-                      controller.swipe(CardSwiperDirection.right),
                 ),
               ),
             ],
@@ -265,30 +287,31 @@ class _LearnCardFace extends StatelessWidget {
     return Stack(
       children: [
         // Card
-        Card(
-          elevation: 8,
-          shadowColor: Colors.black26,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFFFF8E7), Colors.white],
+        Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white, // Pure white for a crisp look
+            borderRadius: BorderRadius.circular(32), // High border radius for pill card look
+            border: Border.all(
+              color: Colors.grey.shade200,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 20,
+                spreadRadius: 2,
+                offset: const Offset(0, 8), // Soft underlying glow
               ),
-            ),
-            padding: const EdgeInsets.all(32),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 250),
-              child: isFlipped
-                  ? _CardBack(key: const ValueKey('back'), card: card)
-                  : _CardFront(key: const ValueKey('front'), card: card),
-            ),
+            ],
+          ),
+          padding: const EdgeInsets.all(32),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 250),
+            child: isFlipped
+                ? _CardBack(key: const ValueKey('back'), card: card)
+                : _CardFront(key: const ValueKey('front'), card: card),
           ),
         ),
 
@@ -550,12 +573,13 @@ class _SummaryView extends StatelessWidget {
               'Session complete!',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
+                    color: ChickyColors.textPrimary,
                   ),
             ),
             const SizedBox(height: 8),
             Text(
-              'You went through $total words',
-              style: TextStyle(color: ChickyColors.textSecondary),
+              'You swept through $total words',
+              style: TextStyle(color: ChickyColors.textSecondary, fontSize: 16),
             ),
             const SizedBox(height: 32),
             Row(
@@ -580,23 +604,10 @@ class _SummaryView extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ChickyColors.primary,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                onPressed: onFinish,
-                child: const Text(
-                  'Done',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
+            ChickyGradientButton(
+              label: 'Done',
+              icon: LucideIcons.check,
+              onTap: onFinish,
             ),
           ],
         ),
@@ -679,9 +690,10 @@ class _EmptyView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: onClose,
-              child: const Text('Go back'),
+            ChickyGradientButton(
+              label: 'Go Back',
+              icon: LucideIcons.arrowLeft,
+              onTap: onClose,
             ),
           ],
         ),

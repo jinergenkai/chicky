@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/colors.dart';
 import 'features/auth/presentation/login_screen.dart';
+import 'features/auth/presentation/onboarding_screen.dart';
 import 'features/auth/presentation/register_screen.dart';
 import 'features/auth/presentation/user_screen.dart';
 import 'features/auth/providers/auth_provider.dart';
@@ -24,15 +25,29 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     redirect: (context, state) {
-      final isLoggedIn = authState.valueOrNull?.session != null;
+      final session = authState.valueOrNull?.session;
+      final isLoggedIn = session != null;
+      final hasCompletedOnboarding = isLoggedIn &&
+          session.user.userMetadata != null &&
+          session.user.userMetadata!['display_name'] != null &&
+          (session.user.userMetadata!['display_name'] as String).trim().isNotEmpty;
+
       final isAuthRoute =
           state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final isOnboardingRoute = state.matchedLocation == '/onboarding';
 
       if (!isLoggedIn && !isAuthRoute) {
         return '/login';
       }
-      if (isLoggedIn && isAuthRoute) {
-        return '/vocmap';
+      
+      if (isLoggedIn) {
+        if (!hasCompletedOnboarding && !isOnboardingRoute) {
+          // Force user to onboarding if name isn't set
+          return '/onboarding';
+        } else if (hasCompletedOnboarding && (isAuthRoute || isOnboardingRoute)) {
+          // If already onboarded, don't let them go back to login/onboarding manually
+          return '/vocmap';
+        }
       }
       return null;
     },
@@ -52,6 +67,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
       ),
 
       // ── Main tabs with floating nav bar ──────────────────────────

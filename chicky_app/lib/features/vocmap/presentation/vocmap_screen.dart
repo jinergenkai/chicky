@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/colors.dart';
+import '../../../shared/widgets/chicky_widgets.dart';
 import '../providers/review_provider.dart';
 import '../providers/vocmap_provider.dart';
 import 'learn_session_screen.dart';
 import 'review_session_screen.dart';
 import 'widgets/domain_list.dart';
 import 'widgets/vocab_card.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class VocMapScreen extends ConsumerStatefulWidget {
   const VocMapScreen({super.key});
@@ -36,36 +37,69 @@ class _VocMapScreenState extends ConsumerState<VocMapScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('VocMap'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            tooltip: 'Scan text',
-            onPressed: () => context.push('/scan'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline),
-            tooltip: 'Chat with Chicky',
-            onPressed: () => context.push('/chat'),
-          ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Review'),
-            Tab(text: 'New Words'),
-            Tab(text: 'Domains'),
+      backgroundColor: ChickyColors.backgroundLight,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Container(
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(26),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: ChickyColors.primary,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: ChickyColors.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        )
+                      ]
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.grey.shade600,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    tabs: const [
+                      Tab(text: 'Review'),
+                      Tab(text: 'Learn'),
+                      Tab(text: 'Domains'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(), // Prevent conflict with internal carousels
+                children: const [
+                  _ReviewTab(),
+                  _NewWordsTab(),
+                  _DomainsTab(),
+                ],
+              ),
+            ),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _ReviewTab(),
-          _NewWordsTab(),
-          _DomainsTab(),
-        ],
       ),
     );
   }
@@ -123,12 +157,12 @@ class _ReviewTab extends ConsumerWidget {
                   child: VocabCard(vocab: cards.first, isPreview: true),
                 ),
                 const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text('Start Review (${cards.length} cards)'),
-                  onPressed: () {
+                ChickyGradientButton(
+                  label: 'Start Review (${cards.length} cards)',
+                  icon: LucideIcons.play,
+                  onTap: () {
                     ref.read(reviewSessionProvider.notifier).startSession();
-                    Navigator.of(context).push(
+                    Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
                         builder: (_) => const ReviewSessionScreen(),
                       ),
@@ -278,18 +312,10 @@ class _NewWordsTab extends ConsumerWidget {
           ) ??
               const SizedBox.shrink(),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.style_rounded),
-            label: const Text('Start Flashcard Session'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: ChickyColors.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-            onPressed: () => Navigator.of(context).push(
+          ChickyGradientButton(
+            label: 'Start Flashcard Session',
+            icon: LucideIcons.layers,
+            onTap: () => Navigator.of(context, rootNavigator: true).push(
               MaterialPageRoute(
                 builder: (_) => const LearnSessionScreen(),
               ),

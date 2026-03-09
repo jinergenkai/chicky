@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/colors.dart';
+import '../../../shared/widgets/chicky_widgets.dart';
 import '../providers/review_provider.dart';
 import 'widgets/vocab_card.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class ReviewSessionScreen extends ConsumerWidget {
   const ReviewSessionScreen({super.key});
@@ -14,19 +16,16 @@ class ReviewSessionScreen extends ConsumerWidget {
     final notifier = ref.read(reviewSessionProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          state.phase == ReviewPhase.reviewing
-              ? 'Review ${state.currentIndex + 1}/${state.queue.length}'
-              : 'Review',
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () {
-            notifier.reset();
-            Navigator.of(context).pop();
-          },
-        ),
+      backgroundColor: ChickyColors.backgroundLight,
+      appBar: chickyAppBar(
+        context,
+        title: state.phase == ReviewPhase.reviewing
+            ? 'Review ${state.currentIndex + 1}/${state.queue.length}'
+            : 'Review',
+        onBack: () {
+          notifier.reset();
+          Navigator.of(context).pop();
+        },
       ),
       body: switch (state.phase) {
         ReviewPhase.loading => const Center(child: CircularProgressIndicator()),
@@ -78,9 +77,10 @@ class _ReviewView extends StatelessWidget {
           valueColor:
               const AlwaysStoppedAnimation<Color>(ChickyColors.primary),
         ),
+        const SizedBox(height: 16),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: GestureDetector(
               onTap: onFlip,
               child: VocabCard(vocab: card, isFlipped: state.isFlipped),
@@ -89,10 +89,14 @@ class _ReviewView extends StatelessWidget {
         ),
         if (!state.isFlipped)
           Padding(
-            padding: const EdgeInsets.all(24),
-            child: ElevatedButton(
-              onPressed: onFlip,
-              child: const Text('Show Answer'),
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: SizedBox(
+              width: double.infinity,
+              child: ChickyGradientButton(
+                label: 'Show Answer',
+                icon: LucideIcons.eye,
+                onTap: onFlip,
+              ),
             ),
           )
         else
@@ -109,7 +113,7 @@ class _GradeButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       child: Row(
         children: [
           _GradeButton(
@@ -117,19 +121,19 @@ class _GradeButtons extends StatelessWidget {
             color: ChickyColors.gradeAgain,
             onTap: () => onGrade('again'),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           _GradeButton(
             label: 'Hard',
             color: ChickyColors.gradeHard,
             onTap: () => onGrade('hard'),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           _GradeButton(
             label: 'Good',
             color: ChickyColors.gradeGood,
             onTap: () => onGrade('good'),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           _GradeButton(
             label: 'Easy',
             color: ChickyColors.gradeEasy,
@@ -154,14 +158,30 @@ class _GradeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withOpacity(0.4)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
-        onPressed: onTap,
-        child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }
@@ -197,10 +217,11 @@ class _SummaryView extends StatelessWidget {
             const SizedBox(height: 24),
             _SummaryRow(label: 'Cards reviewed', value: '$reviewed'),
             _SummaryRow(label: 'Correct', value: '$correct ($pct%)'),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: onFinish,
-              child: const Text('Done'),
+            const SizedBox(height: 48),
+            ChickyGradientButton(
+              label: 'Done',
+              icon: LucideIcons.check,
+              onTap: onFinish,
             ),
           ],
         ),
@@ -259,8 +280,12 @@ class _EmptyView extends StatelessWidget {
                 .bodyMedium
                 ?.copyWith(color: ChickyColors.textSecondary),
           ),
-          const SizedBox(height: 32),
-          ElevatedButton(onPressed: onBack, child: const Text('Back')),
+          const SizedBox(height: 48),
+          ChickyGradientButton(
+            label: 'Go Back',
+            icon: LucideIcons.arrowLeft,
+            onTap: onBack,
+          ),
         ],
       ),
     );
