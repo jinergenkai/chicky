@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/colors.dart';
 import '../../data/models/domain_model.dart';
+import '../../data/models/word_model.dart';
 import '../../providers/vocmap_provider.dart';
 
 class DomainList extends ConsumerWidget {
@@ -119,7 +120,7 @@ class _DomainWordsSheet extends ConsumerWidget {
                   controller: scrollController,
                   itemCount: words.length,
                   itemBuilder: (_, i) {
-                    final w = words[i];
+                    final WordModel w = words[i];
                     return ListTile(
                       title: Text(w.word),
                       subtitle: w.primaryDefinition != null

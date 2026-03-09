@@ -1,7 +1,6 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../../../core/services/supabase_service.dart';
 import '../models/domain_model.dart';
+import '../models/learn_card.dart';
 import '../models/user_vocab_model.dart';
 import '../models/word_model.dart';
 
@@ -48,6 +47,86 @@ class VocabRepository {
         .toList();
   }
 
+  // ── Learn session ─────────────────────────────────────────────────────────
+
+  /// Returns up to [limit] cards for a learn session:
+  /// vault words (status='new') first, then undiscovered words to fill the rest.
+  Future<List<LearnCard>> getLearnCards({int limit = 20}) async {
+    final vaultNew = await getNewCards(limit: limit);
+    final cards = vaultNew
+        .where((uv) => uv.word != null)
+        .map(LearnCard.fromUserVocab)
+        .toList();
+
+    final remaining = limit - cards.length;
+    if (remaining > 0) {
+      final undiscovered = await _getUndiscoveredWords(limit: remaining);
+      cards.addAll(undiscovered.map(LearnCard.fromWordModel));
+    }
+
+    return cards;
+  }
+
+  Future<List<WordModel>> _getUndiscoveredWords({int limit = 10}) async {
+    // Get IDs of all words already in the user's vault
+    final vocabData = await _db.client
+        .from('user_vocabulary')
+        .select('word_id')
+        .eq('user_id', _uid);
+
+    final knownIds =
+        (vocabData as List).map((e) => e['word_id'] as String).toList();
+
+    // Build filter chain first (before order/limit so .not() is available)
+    final data = await (knownIds.isNotEmpty
+        ? _db.client
+            .from('words')
+            .select()
+            .eq('verified', true)
+            .not('id', 'in', knownIds)
+            .order('frequency_rank')
+            .limit(limit)
+        : _db.client
+            .from('words')
+            .select()
+            .eq('verified', true)
+            .order('frequency_rank')
+            .limit(limit));
+    return (data as List)
+        .map((e) => WordModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Records the user's decision for a word during a learn session.
+  /// [decision] is either 'known' or 'learning'.
+  Future<void> markWordDecision(String wordId, String decision) async {
+    final now = DateTime.now().toIso8601String();
+
+    if (decision == 'known') {
+      await _db.client.from('user_vocabulary').upsert({
+        'user_id': _uid,
+        'word_id': wordId,
+        'status': 'known',
+        'source': 'manual',
+        'reps': 1,
+        'first_seen_at': now,
+        'last_reviewed_at': now,
+      });
+    } else {
+      // 'learning' — schedule first review for tomorrow
+      final dueAt =
+          DateTime.now().add(const Duration(days: 1)).toIso8601String();
+      await _db.client.from('user_vocabulary').upsert({
+        'user_id': _uid,
+        'word_id': wordId,
+        'status': 'learning',
+        'source': 'manual',
+        'first_seen_at': now,
+        'due_at': dueAt,
+      });
+    }
+  }
+
   // ── Domains ───────────────────────────────────────────────────────────────
 
   Future<List<DomainModel>> getDomains() async {
@@ -83,7 +162,7 @@ class VocabRepository {
         .maybeSingle();
 
     if (data == null) return null;
-    return WordModel.fromJson(data as Map<String, dynamic>);
+    return WordModel.fromJson(data);
   }
 
   Future<List<WordModel>> getRelatedWords(String wordId) async {
@@ -158,7 +237,7 @@ class VocabRepository {
         .maybeSingle();
 
     if (data == null) return null;
-    return UserVocabModel.fromJson(data as Map<String, dynamic>);
+    return UserVocabModel.fromJson(data);
   }
 
   /// Returns vocab stats for the current user.

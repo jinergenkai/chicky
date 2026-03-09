@@ -21,7 +21,7 @@ class AppUser {
       email: user.email ?? '',
       displayName: user.userMetadata?['display_name'] as String?,
       avatarUrl: user.userMetadata?['avatar_url'] as String?,
-      createdAt: user.createdAt != null ? DateTime.tryParse(user.createdAt!) : null,
+      createdAt: user.createdAt != null ? DateTime.tryParse(user.createdAt) : null,
     );
   }
 

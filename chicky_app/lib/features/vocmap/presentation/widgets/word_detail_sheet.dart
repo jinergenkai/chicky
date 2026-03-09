@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/colors.dart';
 import '../../data/models/word_model.dart';
-import '../../data/repositories/vocab_repository.dart';
 import '../../providers/vocmap_provider.dart';
+import '../word_web_screen.dart';
 
 class WordDetailSheet extends ConsumerWidget {
   const WordDetailSheet({super.key, required this.word});
@@ -173,6 +173,23 @@ class WordDetailSheet extends ConsumerWidget {
                         ),
                       );
                     }
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Explore word web button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.hub_outlined),
+                  label: const Text('Explore Word Web'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => WordWebScreen(word: word),
+                      ),
+                    );
                   },
                 ),
               ),

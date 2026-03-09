@@ -159,6 +159,34 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
+  /// Called by VoiceNotifier after a completed voice exchange.
+  /// Persists both messages to DB and updates in-memory state.
+  Future<void> appendVoiceExchange({
+    required String sessionId,
+    required String userTranscript,
+    required String assistantResponse,
+    List<Map<String, dynamic>> corrections = const [],
+  }) async {
+    try {
+      final savedUser = await _repo.saveMessage(
+        sessionId: sessionId,
+        role: 'user',
+        content: userTranscript,
+      );
+      final savedAssistant = await _repo.saveMessage(
+        sessionId: sessionId,
+        role: 'assistant',
+        content: assistantResponse,
+        corrections: corrections,
+      );
+      state = state.copyWith(
+        messages: [...state.messages, savedUser, savedAssistant],
+      );
+    } catch (_) {
+      // Non-critical — voice already played; swallow persistence error silently.
+    }
+  }
+
   void clearError() {
     state = state.copyWith(clearError: true);
   }
@@ -168,8 +196,3 @@ final chatProvider = StateNotifierProvider<ChatNotifier, ChatState>(
   (ref) => ChatNotifier(ref),
 );
 
-// Helper extension
-extension _ListX<T> on List<T> {
-  List<T> takeLast(int n) =>
-      length <= n ? this : sublist(length - n);
-}

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/colors.dart';
 import '../../vocmap/presentation/widgets/word_detail_sheet.dart';
-import '../data/repositories/scan_repository.dart';
 import '../providers/scan_provider.dart';
 import 'widgets/highlighted_text.dart';
 import 'widgets/text_input_area.dart';

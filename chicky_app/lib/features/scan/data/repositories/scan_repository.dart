@@ -1,5 +1,3 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../../../core/services/api_service.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../../core/utils/text_tokenizer.dart';
@@ -106,7 +104,7 @@ class ScanRepository {
           .maybeSingle();
 
       if (data != null) {
-        return WordModel.fromJson(data as Map<String, dynamic>);
+        return WordModel.fromJson(data);
       }
 
       // Fallback: ask FastAPI dictionary service
@@ -153,6 +151,7 @@ class ScanRepository {
   WordKnowledgeStatus _toStatus(String s) => switch (s) {
         'known' => WordKnowledgeStatus.known,
         'learning' => WordKnowledgeStatus.learning,
+        'new' => WordKnowledgeStatus.learning, // in vault but not yet studied → yellow
         _ => WordKnowledgeStatus.unknown,
       };
 }

@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/models/user_vocab_model.dart';
-import '../data/repositories/vocab_repository.dart';
 import 'fsrs_provider.dart';
 import 'vocmap_provider.dart';
 

@@ -20,9 +20,10 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: ChickyColors.backgroundLight,
       appBarTheme: const AppBarTheme(
-        backgroundColor: ChickyColors.primary,
-        foregroundColor: ChickyColors.textOnPrimary,
+        backgroundColor: Colors.white,
+        foregroundColor: ChickyColors.textPrimary,
         elevation: 0,
+        scrolledUnderElevation: 2,
         centerTitle: true,
       ),
       cardTheme: CardThemeData(

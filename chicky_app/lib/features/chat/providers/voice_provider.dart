@@ -1,9 +1,9 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/audio_service.dart';
-import '../data/repositories/chat_repository.dart';
 import 'chat_provider.dart';
 
 enum VoiceState { idle, recording, processing, playing }
@@ -43,25 +43,54 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
       // Send audio bytes
       channel.sink.add(bytes);
 
-      // Collect response
-      final responseBuffer = StringBuffer();
+      // Parse structured JSON messages from server
+      // Server sends: {"type":"transcript","content":"..."} → binary audio chunks
+      //               → {"type":"done","content":"...","corrections":[...]}
+      String transcript = '';
+      String responseText = '';
+      List<Map<String, dynamic>> corrections = [];
+
       await for (final message in channel.stream) {
         if (message is String) {
-          final data = message;
-          if (data == '[DONE]') break;
-          responseBuffer.write(data);
+          try {
+            final json = jsonDecode(message) as Map<String, dynamic>;
+            final type = json['type'] as String?;
+            if (type == 'transcript') {
+              transcript = json['content'] as String? ?? '';
+            } else if (type == 'done') {
+              responseText = json['content'] as String? ?? '';
+              corrections = (json['corrections'] as List?)
+                      ?.cast<Map<String, dynamic>>() ??
+                  [];
+              break;
+            }
+            // type == 'error': ignore, loop ends naturally
+          } catch (_) {
+            // Unexpected non-JSON text — skip
+          }
         }
+        // Binary audio chunks from server are ignored here;
+        // we fetch TTS audio via HTTP below for simplicity.
       }
 
       await channel.sink.close();
 
-      final responseText = responseBuffer.toString();
       if (responseText.isNotEmpty) {
-        // TTS playback
+        // TTS playback via HTTP (simpler than streaming binary from WS)
         state = VoiceState.playing;
         final audio = await repo.synthesizeSpeech(responseText);
         if (audio != null) {
           await _audio.playFromBytes(audio);
+        }
+
+        // Persist exchange to DB + update chat UI
+        if (transcript.isNotEmpty) {
+          await _ref.read(chatProvider.notifier).appendVoiceExchange(
+                sessionId: sessionId,
+                userTranscript: transcript,
+                assistantResponse: responseText,
+                corrections: corrections,
+              );
         }
       }
 

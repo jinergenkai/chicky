@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 
+from ..database import fetch_all
 from ..models.chat_models import TextChatRequest
 from ..services.llm_service import get_llm_service
 from ..services.prompt_builder import (
@@ -88,7 +89,7 @@ async def chat_voice(
     """
     # Verify token before accepting
     try:
-        user = verify_supabase_jwt(token)
+        user = await verify_supabase_jwt(token)
     except Exception:
         await websocket.close(code=4001, reason="Unauthorized")
         return
@@ -119,8 +120,25 @@ async def chat_voice(
                 json.dumps({"type": "transcript", "content": transcript})
             )
 
-            # Step 2: LLM response (buddy mode for voice)
-            messages = build_buddy_prompt([{"role": "user", "content": transcript}])
+            # Step 2: Fetch session history from DB for context
+            history_rows = await fetch_all(
+                """
+                SELECT role, content FROM chat_messages
+                WHERE session_id = $1
+                ORDER BY created_at DESC
+                LIMIT 20
+                """,
+                session_id,
+            )
+            # Rows come back newest-first; reverse for chronological order
+            history = [
+                {"role": r["role"], "content": r["content"]}
+                for r in reversed(history_rows)
+            ]
+            history.append({"role": "user", "content": transcript})
+
+            # Step 3: LLM response (buddy mode for voice)
+            messages = build_buddy_prompt(history)
 
             full_response = []
             sentence_buffer = ""

@@ -38,7 +38,7 @@ class ChatRepository {
         })
         .select()
         .single();
-    return ChatSessionModel.fromJson(data as Map<String, dynamic>);
+    return ChatSessionModel.fromJson(data);
   }
 
   Future<List<ChatSessionModel>> getSessions({int limit = 20}) async {
@@ -60,7 +60,7 @@ class ChatRepository {
         .eq('id', sessionId)
         .maybeSingle();
     if (data == null) return null;
-    return ChatSessionModel.fromJson(data as Map<String, dynamic>);
+    return ChatSessionModel.fromJson(data);
   }
 
   Future<void> updateSessionTitle(String sessionId, String title) async {
@@ -101,7 +101,7 @@ class ChatRepository {
         })
         .select()
         .single();
-    return ChatMessageModel.fromJson(data as Map<String, dynamic>);
+    return ChatMessageModel.fromJson(data);
   }
 
   // ── API: Text chat ────────────────────────────────────────────────────────

@@ -14,7 +14,7 @@ class ChickyColors {
   static const Color secondaryDark = Color(0xFFCC4A1A);
 
   // Background tones
-  static const Color backgroundLight = Color(0xFFFFFBF2);
+  static const Color backgroundLight = Color(0xFFF8F9FA);
   static const Color backgroundDark = Color(0xFF1A1A1A);
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color surfaceDark = Color(0xFF2A2A2A);

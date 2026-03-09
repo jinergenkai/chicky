@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../data/models/domain_model.dart';
 import '../data/models/user_vocab_model.dart';
+import '../data/models/word_model.dart';
 import '../data/repositories/vocab_repository.dart';
 
 part 'vocmap_provider.g.dart';
@@ -51,9 +52,17 @@ final selectedDomainProvider = StateProvider<DomainModel?>((ref) => null);
 // ── Domain words ──────────────────────────────────────────────────────────
 
 @riverpod
-Future<List<dynamic>> domainWords(DomainWordsRef ref) async {
+Future<List<WordModel>> domainWords(DomainWordsRef ref) async {
   final domain = ref.watch(selectedDomainProvider);
   if (domain == null) return [];
   final repo = ref.watch(vocabRepositoryProvider);
   return repo.getDomainWords(domain.id);
 }
+
+// ── Related words (for word web) ─────────────────────────────────────────
+
+final relatedWordsProvider =
+    FutureProvider.family<List<WordModel>, String>((ref, wordId) {
+  final repo = ref.read(vocabRepositoryProvider);
+  return repo.getRelatedWords(wordId);
+});

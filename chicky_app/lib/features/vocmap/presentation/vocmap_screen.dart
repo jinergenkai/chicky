@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/colors.dart';
 import '../providers/review_provider.dart';
 import '../providers/vocmap_provider.dart';
+import 'learn_session_screen.dart';
 import 'review_session_screen.dart';
 import 'widgets/domain_list.dart';
 import 'widgets/vocab_card.dart';
@@ -222,23 +223,136 @@ class _NewWordsTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final newAsync = ref.watch(newCardsProvider);
+    final statsAsync = ref.watch(vocabStatsProvider);
 
-    return newAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
-      data: (cards) {
-        if (cards.isEmpty) {
-          return const Center(child: Text('No new words yet. Try scanning some text!'));
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: cards.length,
-          itemBuilder: (context, i) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: VocabCard(vocab: cards[i], isPreview: true),
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            '📖',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 64),
           ),
-        );
-      },
+          const SizedBox(height: 16),
+          Text(
+            'Learn New Words',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Swipe right if you know it, left to add it to your learning queue.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: ChickyColors.textSecondary),
+          ),
+          const SizedBox(height: 32),
+          // Pending new-words count badge
+          newAsync.whenOrNull(
+            data: (cards) => cards.isNotEmpty
+                ? Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: ChickyColors.vocabLearning.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: ChickyColors.vocabLearning.withOpacity(0.4),
+                        ),
+                      ),
+                      child: Text(
+                        '${cards.length} words waiting in your vault',
+                        style: const TextStyle(
+                          color: ChickyColors.vocabLearning,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ) ??
+              const SizedBox.shrink(),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.style_rounded),
+            label: const Text('Start Flashcard Session'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ChickyColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const LearnSessionScreen(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 48),
+          // Stats summary
+          statsAsync.whenOrNull(
+            data: (stats) => Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _MiniStat(
+                    label: 'Known',
+                    value: stats['known'] ?? 0,
+                    color: ChickyColors.vocabKnown),
+                const SizedBox(width: 24),
+                _MiniStat(
+                    label: 'Learning',
+                    value: stats['learning'] ?? 0,
+                    color: ChickyColors.vocabLearning),
+                const SizedBox(width: 24),
+                _MiniStat(
+                    label: 'New',
+                    value: stats['new'] ?? 0,
+                    color: ChickyColors.vocabNew),
+              ],
+            ),
+          ) ??
+              const SizedBox.shrink(),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final int value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          '$value',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, color: ChickyColors.textSecondary),
+        ),
+      ],
     );
   }
 }
