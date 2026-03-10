@@ -17,6 +17,12 @@ const _wakewordPatterns = [
   'pico voice',
   'pickle voice',
   'pick a voice',
+  'picklevoice',
+  'Picovoice',
+  'Pico voice',
+  'Pickle voice',
+  'Pick a voice',
+  'Picklevoice',
 ];
 
 class VoiceNotifier extends StateNotifier<VoiceState> {
@@ -240,9 +246,10 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
     final lower = cleaned.toLowerCase();
     for (final pattern in _wakewordPatterns) {
       if (lower.endsWith(pattern)) {
+        cleaned = cleaned.replaceAll(RegExp(r'[,.?!\s]+$'), '');
         cleaned = cleaned.substring(0, cleaned.length - pattern.length).trim();
         // Also remove trailing punctuation left behind (e.g. "Hello, picovoice" → "Hello")
-        cleaned = cleaned.replaceAll(RegExp(r'[,.\s]+$'), '');
+        cleaned = cleaned.replaceAll(RegExp(r'[,.?!\s]+$'), '');
         developer.log(
             '🧹 Stripped wakeword "$pattern" from transcript → "$cleaned"',
             name: 'VoiceFlow');

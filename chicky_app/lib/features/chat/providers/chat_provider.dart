@@ -191,14 +191,36 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   /// Called by VoiceNotifier after a completed voice exchange.
-  /// Persists both messages to DB and updates in-memory state.
+  /// Persists both messages to DB and updates in-memory state with a typewriter effect.
   Future<void> appendVoiceExchange({
     required String sessionId,
     required String userTranscript,
     required String assistantResponse,
     List<Map<String, dynamic>> corrections = const [],
   }) async {
-    developer.log('📝 Appending voice exchange to chat history view...', name: 'ChatFlow');
+    developer.log('📝 Appending voice exchange to chat history view...',
+        name: 'ChatFlow');
+
+    // Show user message immediately
+    final localUser = ChatMessageModelX.userMessage(userTranscript, sessionId);
+    state = state.copyWith(
+      messages: [...state.messages, localUser],
+      isStreaming: true,
+      streamingContent: '',
+    );
+
+    // Typewriter effect: reveal AI response word-by-word
+    final words = assistantResponse.split(' ');
+    final buffer = StringBuffer();
+    for (int i = 0; i < words.length; i++) {
+      if (i > 0) buffer.write(' ');
+      buffer.write(words[i]);
+      state = state.copyWith(streamingContent: buffer.toString());
+      // ~40ms per word ≈ fast typewriter, adjust if needed
+      await Future.delayed(const Duration(milliseconds: 40));
+    }
+
+    // Finalize: persist to DB and replace streaming with real messages
     try {
       final savedUser = await _repo.saveMessage(
         sessionId: sessionId,
@@ -211,12 +233,26 @@ class ChatNotifier extends StateNotifier<ChatState> {
         content: assistantResponse,
         corrections: corrections,
       );
+
+      // Remove the local-only user msg, add persisted versions
+      final msgs = state.messages
+          .where((m) => !m.isLocalOnly)
+          .toList()
+        ..addAll([savedUser, savedAssistant]);
+
       state = state.copyWith(
-        messages: [...state.messages, savedUser, savedAssistant],
+        messages: msgs,
+        isStreaming: false,
+        streamingContent: '',
       );
     } catch (e) {
-      developer.log('⚠️ Failed to append voice exchange: $e', name: 'ChatFlow', error: e);
-      // Non-critical — voice already played; swallow persistence error silently.
+      developer.log('⚠️ Failed to append voice exchange: $e',
+          name: 'ChatFlow', error: e);
+      // Still stop streaming even if persistence fails
+      state = state.copyWith(
+        isStreaming: false,
+        streamingContent: '',
+      );
     }
   }
 

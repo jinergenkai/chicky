@@ -111,7 +111,7 @@ async def chat_voice(
 
             # Step 1: Transcribe
             try:
-                transcript = await whisper.transcribe(audio_data, language="en")
+                transcript = await whisper.transcribe(audio_data)
             except Exception as exc:
                 await websocket.send_text(
                     json.dumps({"type": "error", "content": str(exc)})
