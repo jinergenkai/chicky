@@ -73,9 +73,9 @@ class _ReviewView extends StatelessWidget {
         // Progress bar
         LinearProgressIndicator(
           value: state.currentIndex / state.queue.length,
-          backgroundColor: ChickyColors.primaryLight.withOpacity(0.2),
+          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           valueColor:
-              const AlwaysStoppedAnimation<Color>(ChickyColors.primary),
+              AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(height: 16),
         Expanded(

@@ -178,7 +178,7 @@ class _UnknownWordsSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: ChickyColors.primaryLight.withOpacity(0.2),
+      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [

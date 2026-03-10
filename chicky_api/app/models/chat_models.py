@@ -13,9 +13,10 @@ class HistoryMessage(BaseModel):
 class TextChatRequest(BaseModel):
     session_id: str
     message: str = Field(..., min_length=1, max_length=4000)
-    mode: Literal["buddy", "roleplay"] = "buddy"
+    mode: Literal["buddy", "roleplay", "vocabulary"] = "buddy"
     scenario_id: str | None = None
     history: list[HistoryMessage] = Field(default_factory=list)
+    learning_words: list[str] = Field(default_factory=list)
 
 
 class TextChatResponse(BaseModel):

@@ -62,11 +62,11 @@ class _VocMapScreenState extends ConsumerState<VocMapScreen>
                   child: TabBar(
                     controller: _tabController,
                     indicator: BoxDecoration(
-                      color: ChickyColors.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: ChickyColors.primary.withOpacity(0.3),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         )

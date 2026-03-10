@@ -30,10 +30,10 @@ class MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
-            const CircleAvatar(
+            CircleAvatar(
               radius: 16,
-              backgroundColor: ChickyColors.primaryLight,
-              child: Text('🐣', style: TextStyle(fontSize: 16)),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+              child: const Text('🐣', style: TextStyle(fontSize: 16)),
             ),
             const SizedBox(width: 8),
           ],
@@ -90,10 +90,10 @@ class MessageBubble extends StatelessWidget {
           ),
           if (isUser) ...[
             const SizedBox(width: 8),
-            const CircleAvatar(
+            CircleAvatar(
               radius: 16,
-              backgroundColor: ChickyColors.primaryDark,
-              child: Icon(Icons.person, size: 18, color: Colors.white),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              child: const Icon(Icons.person, size: 18, color: Colors.white),
             ),
           ],
         ],
@@ -205,8 +205,8 @@ class _BlinkingDotState extends State<_BlinkingDot>
       child: Container(
         width: 6,
         height: 6,
-        decoration: const BoxDecoration(
-          color: ChickyColors.primary,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
           shape: BoxShape.circle,
         ),
       ),

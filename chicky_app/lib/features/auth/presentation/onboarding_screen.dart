@@ -157,7 +157,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         height: 6,
                         width: isActive ? 16 : 6,
                         decoration: BoxDecoration(
-                          color: isActive ? ChickyColors.primary : Colors.grey.shade200,
+                          color: isActive ? Theme.of(context).colorScheme.primary : Colors.grey.shade200,
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -231,10 +231,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: ChickyColors.primaryLight.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(LucideIcons.hand, size: 64, color: ChickyColors.primary),
+            child: Icon(LucideIcons.hand, size: 64, color: Theme.of(context).colorScheme.primary),
           ),
           const SizedBox(height: 32),
           Text(
@@ -321,10 +321,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: ChickyColors.primaryLight.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(LucideIcons.user, size: 48, color: ChickyColors.primary),
+              child: Icon(LucideIcons.user, size: 48, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(height: 32),
             Text(
@@ -422,7 +422,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     borderRadius: BorderRadius.circular(32),
                     boxShadow: [
                       BoxShadow(
-                        color: ChickyColors.primary.withOpacity(0.15),
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
                         blurRadius: 24,
                         offset: const Offset(0, 12),
                         spreadRadius: 4,

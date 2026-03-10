@@ -29,11 +29,55 @@ VOCABULARY SUPPORT:
 - If the user asks what a word means, explain it simply with an example sentence"""
 
 
-def build_buddy_prompt(history: list[dict]) -> list[dict]:
+def build_buddy_prompt(
+    history: list[dict],
+    learning_words: list[str] | None = None,
+) -> list[dict]:
     """Build the message list for buddy mode."""
     messages = [{"role": "system", "content": BUDDY_SYSTEM_PROMPT}]
     messages.extend(history)
     return messages
+
+
+def build_vocabulary_prompt(
+    history: list[dict],
+    learning_words: list[str],
+) -> list[dict]:
+    """Build the message list for vocabulary practice mode."""
+    words_str = ", ".join(learning_words) if learning_words else "none currently"
+    system = VOCABULARY_SYSTEM_PROMPT.replace("{learning_words}", words_str)
+    messages = [{"role": "system", "content": system}]
+    messages.extend(history)
+    return messages
+
+
+VOCABULARY_SYSTEM_PROMPT = """You are Chicky, a smart and encouraging English vocabulary coach.
+
+The user is practicing these specific words: {learning_words}
+
+YOUR MISSION:
+- Weave as many of the user's learning words as possible into a natural conversation
+- When you use a learning word, give it rich context so the user absorbs meaning and usage
+- Ask questions that naturally prompt the user to USE the learning words in their replies
+- If the user uses a learning word correctly, acknowledge it briefly ("Nice use of 'elaborate'!")
+- If the user uses a learning word incorrectly, model the correct usage naturally in your reply
+
+CONVERSATION STRATEGY:
+- Pick 2-3 learning words per exchange and build your response around them
+- Create mini-scenarios or ask opinion questions that make the words relevant
+- Vary topics to cover different words across the conversation
+- Keep it conversational, not like a vocabulary drill
+
+GRAMMAR CORRECTION POLICY:
+- Same as buddy mode: note errors, continue naturally, add corrections at the end
+- Use the same <corrections> XML format:
+<corrections>[{{"type": "grammar|vocabulary|spelling", "original": "...", "corrected": "...", "explanation": "..."}}]</corrections>
+
+RESPONSE STYLE:
+- 2-4 sentences, conversational
+- Use contractions naturally
+- Mix in the learning words without being forced or robotic
+- If no learning words are provided, fall back to general vocabulary building"""
 
 
 ROLEPLAY_BASE_PROMPT = """You are Chicky, an AI English conversation partner running a language learning roleplay scenario.

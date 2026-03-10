@@ -88,21 +88,21 @@ class _FsrsReviewButtonsState extends State<FsrsReviewButtons>
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
             decoration: BoxDecoration(
-              color: ChickyColors.primaryLight.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.star_rounded,
-                    color: ChickyColors.primaryDark, size: 20),
+                    color: Theme.of(context).colorScheme.primary, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'How well did you know this?',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: ChickyColors.primaryDark,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ],

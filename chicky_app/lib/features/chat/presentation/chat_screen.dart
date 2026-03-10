@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../../core/theme/colors.dart';
-import '../../../shared/widgets/chicky_widgets.dart';
 import '../data/models/chat_message_model.dart';
+import '../data/models/chat_session_model.dart';
 import '../providers/chat_provider.dart';
 import '../providers/voice_provider.dart';
 import '../providers/wakeword_provider.dart';
@@ -20,14 +20,26 @@ class ChatScreen extends ConsumerStatefulWidget {
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends ConsumerState<ChatScreen> {
+class _ChatScreenState extends ConsumerState<ChatScreen>
+    with SingleTickerProviderStateMixin {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
-  bool _showTextInput = true;
+  bool _isVoiceMode = false;
+
+  late final AnimationController _modeAnimController;
+  late final Animation<double> _modeAnim;
 
   @override
   void initState() {
     super.initState();
+    _modeAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _modeAnim = CurvedAnimation(
+      parent: _modeAnimController,
+      curve: Curves.easeInOutCubic,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(chatProvider.notifier).initSession();
     });
@@ -37,7 +49,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+    _modeAnimController.dispose();
+    ref.read(wakeWordProvider.notifier).stop();
     super.dispose();
+  }
+
+  void _startWakeWord() {
+    ref.read(wakeWordProvider.notifier).start(
+      onDetected: () {
+        final voice = ref.read(voiceProvider);
+        if (voice == VoiceState.idle) {
+          ref.read(voiceProvider.notifier).startRecording();
+        }
+      },
+    );
+  }
+
+  void _toggleInputMode() {
+    setState(() => _isVoiceMode = !_isVoiceMode);
+    if (_isVoiceMode) {
+      _modeAnimController.forward();
+      _startWakeWord();
+    } else {
+      _modeAnimController.reverse();
+      ref.read(wakeWordProvider.notifier).stop();
+    }
   }
 
   void _scrollToBottom() {
@@ -64,157 +100,449 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     final chatState = ref.watch(chatProvider);
     final voiceState = ref.watch(voiceProvider);
+    ref.watch(wakeWordProvider);
     final session = ref.watch(activeSessionProvider);
 
-    // Auto scroll when messages update
     ref.listen(chatProvider, (_, __) => _scrollToBottom());
 
     return Scaffold(
-      backgroundColor: ChickyColors.backgroundLight,
-      appBar: chickyAppBar(
-        context,
-        title: 'Chicky Chat',
-        onBack: () {}, // Handled by GoRouter naturally if pushed
-        actions: [
-          IconButton(
-            icon: Icon(
-              _showTextInput ? LucideIcons.mic : LucideIcons.keyboard,
-              color: Colors.grey.shade700,
-            ),
-            onPressed: () => setState(() => _showTextInput = !_showTextInput),
-          ),
-          const SizedBox(width: 8),
-        ],
+      backgroundColor: _isVoiceMode
+          ? const Color(0xFF0D0F15)
+          : ChickyColors.backgroundLight,
+      body: AnimatedBuilder(
+        animation: _modeAnim,
+        builder: (context, _) {
+          return _isVoiceMode
+              ? _buildVoiceLayout(chatState, voiceState, session)
+              : _buildTextLayout(chatState, voiceState, session);
+        },
       ),
-      body: Column(
-        children: [
-          // Mode selector right below app bar with nice padding
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: ModeSelector(
-              currentMode: ref.watch(chatModeProvider),
-              onModeChanged: (mode) {
-                ref.read(chatModeProvider.notifier).state = mode;
-                ref.read(chatProvider.notifier).initSession(mode: mode);
-              },
+    );
+  }
+
+  // ── Text mode layout (original chat style) ─────────────────────────────
+
+  Widget _buildTextLayout(
+    ChatState chatState,
+    VoiceState voiceState,
+    ChatSessionModel? session,
+  ) {
+    return Column(
+      children: [
+        // Compact top bar: mode selector + voice toggle
+        SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ModeSelector(
+                    currentMode: ref.watch(chatModeProvider),
+                    onModeChanged: (mode) {
+                      ref.read(chatModeProvider.notifier).state = mode;
+                      ref.read(chatProvider.notifier).initSession(mode: mode);
+                    },
+                  ),
+                ),
+                _InputModeToggle(
+                  isVoice: false,
+                  onTap: _toggleInputMode,
+                ),
+              ],
             ),
           ),
-          
-          // Messages list with subtle pattern background
-          Expanded(
+        ),
+
+        // Messages
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.only(top: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(28)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: chatState.isLoading && chatState.messages.isEmpty
+                ? const Center(child: CircularProgressIndicator())
+                : ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 20,
+                      bottom: 120,
+                    ),
+                    itemCount: chatState.messages.length +
+                        (chatState.isStreaming ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index == chatState.messages.length &&
+                          chatState.isStreaming) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: MessageBubble(
+                            content: chatState.streamingContent,
+                            isUser: false,
+                            isStreaming: true,
+                          ),
+                        );
+                      }
+                      final msg = chatState.messages[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          crossAxisAlignment: msg.isUser
+                              ? CrossAxisAlignment.end
+                              : CrossAxisAlignment.start,
+                          children: [
+                            MessageBubble(
+                              content: msg.content,
+                              isUser: msg.isUser,
+                            ),
+                            if (msg.hasCorrections) ...[
+                              const SizedBox(height: 8),
+                              CorrectionCard(corrections: msg.corrections),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ),
+
+        // Text input dock
+        Builder(builder: (context) {
+          final isKeyboardOpen =
+              MediaQuery.of(context).viewInsets.bottom > 0;
+          final bottomPadding = isKeyboardOpen ? 16.0 : 100.0;
+
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 8,
+              bottom: bottomPadding,
+            ),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
-              child: chatState.isLoading && chatState.messages.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.only(
-                        left: 16, 
-                        right: 16, 
-                        top: 24, 
-                        bottom: 120, // space for floating dock
-                      ),
-                      itemCount: chatState.messages.length +
-                          (chatState.isStreaming ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index == chatState.messages.length &&
-                            chatState.isStreaming) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: MessageBubble(
-                              content: chatState.streamingContent,
-                              isUser: false,
-                              isStreaming: true,
-                            ),
-                          );
-                        }
-                        final msg = chatState.messages[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Column(
-                            crossAxisAlignment: msg.isUser
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            children: [
-                              MessageBubble(
-                                content: msg.content,
-                                isUser: msg.isUser,
-                              ),
-                              if (msg.hasCorrections) ...[
-                                const SizedBox(height: 8),
-                                CorrectionCard(corrections: msg.corrections),
-                              ],
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: _TextInputRow(
+                  controller: _textController,
+                  onSend: _sendText,
+                  isLoading: chatState.isStreaming,
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  // ── Voice mode layout (immersive karaoke style) ────────────────────────
+
+  Widget _buildVoiceLayout(
+    ChatState chatState,
+    VoiceState voiceState,
+    ChatSessionModel? session,
+  ) {
+    // Get the last few messages for the "lyric lines"
+    final messages = chatState.messages;
+    final streamingText = chatState.streamingContent;
+    final isStreaming = chatState.isStreaming;
+
+    return SafeArea(
+      child: Column(
+        children: [
+          // ── Minimal top bar ──────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+            child: Row(
+              children: [
+                // Small mode pills
+                _VoiceModePill(
+                  currentMode: ref.watch(chatModeProvider),
+                  onModeChanged: (mode) {
+                    ref.read(chatModeProvider.notifier).state = mode;
+                    ref.read(chatProvider.notifier).initSession(mode: mode);
+                  },
+                ),
+                const Spacer(),
+                _InputModeToggle(
+                  isVoice: true,
+                  onTap: _toggleInputMode,
+                ),
+              ],
             ),
           ),
-          
-          // Floating Input Dock directly in Column instead of FAB
-          // so we can dynamically avoid the MainShell's bottom nav bar
-          Builder(
-            builder: (context) {
-              final isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-              final bottomPadding = isKeyboardOpen ? 16.0 : 100.0;
-              
-              return Padding(
-                padding: EdgeInsets.only(
-                  left: 16, 
-                  right: 16, 
-                  top: 12, 
-                  bottom: bottomPadding,
-                ),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8),
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _showTextInput
-                        ? _TextInputRow(
-                            controller: _textController,
-                            onSend: _sendText,
-                            isLoading: chatState.isStreaming,
-                          )
-                        : VoiceButton(
-                            voiceState: voiceState,
-                            sessionId: session?.id ?? '',
-                          ),
-                  ),
-                ),
-              );
-            }
+
+          // ── Lyric area (big text, center-aligned) ───────────────────
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: _VoiceLyricsView(
+                messages: messages,
+                streamingText: streamingText,
+                isStreaming: isStreaming,
+                voiceState: voiceState,
+              ),
+            ),
+          ),
+
+          // ── Voice control area ──────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(bottom: 80),
+            child: VoiceButton(
+              voiceState: voiceState,
+              sessionId: session?.id ?? '',
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+// ── Voice lyrics view ─────────────────────────────────────────────────────
+
+class _VoiceLyricsView extends StatelessWidget {
+  const _VoiceLyricsView({
+    required this.messages,
+    required this.streamingText,
+    required this.isStreaming,
+    required this.voiceState,
+  });
+
+  final List<ChatMessageModel> messages;
+  final String streamingText;
+  final bool isStreaming;
+  final VoiceState voiceState;
+
+  @override
+  Widget build(BuildContext context) {
+    // Show the last 2-3 exchanges as big "lyric lines"
+    final displayLines = <_LyricLine>[];
+
+    // Take last 4 messages max
+    final recent = messages.length > 4
+        ? messages.sublist(messages.length - 4)
+        : messages;
+
+    for (final msg in recent) {
+      displayLines.add(_LyricLine(
+        text: msg.content,
+        isUser: msg.isUser,
+        isCurrent: false,
+      ));
+    }
+
+    // Add streaming content as the current "active" line
+    if (isStreaming && streamingText.isNotEmpty) {
+      displayLines.add(_LyricLine(
+        text: streamingText,
+        isUser: false,
+        isCurrent: true,
+      ));
+    }
+
+    if (displayLines.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              voiceState == VoiceState.recording
+                  ? Icons.graphic_eq_rounded
+                  : Icons.mic_none_rounded,
+              size: 48,
+              color: Colors.white.withValues(alpha: 0.2),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              voiceState == VoiceState.recording
+                  ? 'Listening...'
+                  : voiceState == VoiceState.processing
+                      ? 'Thinking...'
+                      : 'Say something',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.4),
+                fontSize: 18,
+                fontWeight: FontWeight.w300,
+                letterSpacing: 1,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (int i = 0; i < displayLines.length; i++) ...[
+          if (i > 0) const SizedBox(height: 20),
+          _buildLyricLine(context, displayLines[i], i, displayLines.length),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildLyricLine(BuildContext context, _LyricLine line, int index, int total) {
+    // Older lines fade out, current line is brightest
+    final recency = (index + 1) / total; // 0→old, 1→newest
+    final alpha = line.isCurrent ? 1.0 : (0.25 + 0.6 * recency);
+    final fontSize = line.isCurrent ? 22.0 : (16.0 + 4.0 * recency);
+
+    return AnimatedDefaultTextStyle(
+      duration: const Duration(milliseconds: 300),
+      style: TextStyle(
+        color: line.isUser
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: alpha)
+            : Colors.white.withValues(alpha: alpha),
+        fontSize: fontSize,
+        fontWeight: line.isCurrent ? FontWeight.w600 : FontWeight.w400,
+        height: 1.5,
+        letterSpacing: line.isCurrent ? 0.3 : 0,
+      ),
+      textAlign: TextAlign.center,
+      child: Text(
+        _truncateText(line.text, line.isCurrent ? 200 : 120),
+        textAlign: TextAlign.center,
+        maxLines: line.isCurrent ? 4 : 2,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
+  String _truncateText(String text, int maxLen) {
+    if (text.length <= maxLen) return text;
+    return '${text.substring(0, maxLen)}...';
+  }
+}
+
+class _LyricLine {
+  const _LyricLine({
+    required this.text,
+    required this.isUser,
+    required this.isCurrent,
+  });
+  final String text;
+  final bool isUser;
+  final bool isCurrent;
+}
+
+// ── Input mode toggle button ──────────────────────────────────────────────
+
+class _InputModeToggle extends StatelessWidget {
+  const _InputModeToggle({
+    required this.isVoice,
+    required this.onTap,
+  });
+
+  final bool isVoice;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isVoice
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.grey.shade100,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          isVoice ? LucideIcons.keyboard : LucideIcons.mic,
+          size: 20,
+          color: isVoice ? Colors.white70 : Colors.grey.shade600,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Voice mode pill (minimal mode selector for dark bg) ───────────────────
+
+class _VoiceModePill extends StatelessWidget {
+  const _VoiceModePill({
+    required this.currentMode,
+    required this.onModeChanged,
+  });
+
+  final ChatMode currentMode;
+  final ValueChanged<ChatMode> onModeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _pill('Buddy', ChatMode.buddy),
+          _pill('Vocab', ChatMode.vocabulary),
+          _pill('Role', ChatMode.roleplay),
+        ],
+      ),
+    );
+  }
+
+  Widget _pill(String label, ChatMode mode) {
+    final selected = currentMode == mode;
+    return GestureDetector(
+      onTap: () => onModeChanged(mode),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected
+              ? Colors.white.withValues(alpha: 0.15)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            color: selected
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.4),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Text input row ────────────────────────────────────────────────────────
 
 class _TextInputRow extends StatelessWidget {
   const _TextInputRow({
@@ -242,7 +570,7 @@ class _TextInputRow extends StatelessWidget {
               hintText: 'Message Chicky...',
               hintStyle: TextStyle(color: Colors.grey.shade400),
               filled: true,
-              fillColor: Colors.transparent, // Let dock handle background
+              fillColor: Colors.transparent,
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -262,14 +590,14 @@ class _TextInputRow extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                ChickyColors.primary,
-                ChickyColors.primaryDark,
+                Theme.of(context).colorScheme.primary,
+                Theme.of(context).colorScheme.primary,
               ],
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: ChickyColors.primary.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
@@ -287,7 +615,8 @@ class _TextInputRow extends StatelessWidget {
                   ),
                 )
               : IconButton(
-                  icon: const Icon(LucideIcons.send, color: Colors.white, size: 20),
+                  icon: const Icon(LucideIcons.send,
+                      color: Colors.white, size: 20),
                   onPressed: onSend,
                 ),
         ),

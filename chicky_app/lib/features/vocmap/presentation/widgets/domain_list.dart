@@ -265,13 +265,13 @@ class _DomainWordsSheet extends ConsumerWidget {
                                 ? Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: ChickyColors.primary.withOpacity(0.1),
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(
                                       w.cefrLevel!.toUpperCase(),
-                                      style: const TextStyle(
-                                        color: ChickyColors.primaryDark,
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.primary,
                                         fontWeight: FontWeight.w800,
                                         fontSize: 12,
                                       ),

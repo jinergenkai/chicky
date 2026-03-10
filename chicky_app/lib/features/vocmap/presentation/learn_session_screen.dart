@@ -357,15 +357,15 @@ class _CardFront extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: ChickyColors.primary.withOpacity(0.15),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               card.cefrLevel!.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: ChickyColors.primaryDark,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -441,7 +441,7 @@ class _CardBack extends StatelessWidget {
             Text(
               'Definitions',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: ChickyColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
             ),
@@ -479,7 +479,7 @@ class _CardBack extends StatelessWidget {
             Text(
               'Example',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: ChickyColors.primary,
+                    color: Theme.of(context).colorScheme.primary,
                     fontWeight: FontWeight.bold,
                   ),
             ),
@@ -490,7 +490,7 @@ class _CardBack extends StatelessWidget {
                 color: ChickyColors.backgroundLight,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: ChickyColors.primaryLight.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
                 ),
               ),
               child: Text(

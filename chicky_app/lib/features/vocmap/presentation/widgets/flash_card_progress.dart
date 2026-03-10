@@ -39,7 +39,7 @@ class FlashCardProgress extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: ChickyColors.primary,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
             ],
@@ -52,7 +52,7 @@ class FlashCardProgress extends StatelessWidget {
               minHeight: 4,
               backgroundColor: Colors.grey.shade200,
               valueColor:
-                  const AlwaysStoppedAnimation<Color>(ChickyColors.primary),
+                  AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
             ),
           ),
         ],

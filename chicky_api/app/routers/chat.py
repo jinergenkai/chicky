@@ -13,6 +13,7 @@ from ..services.llm_service import get_llm_service
 from ..services.prompt_builder import (
     build_buddy_prompt,
     build_roleplay_prompt,
+    build_vocabulary_prompt,
     get_scenario_prompt,
 )
 from ..services.tts_service import get_tts_service
@@ -41,11 +42,13 @@ async def chat_text(
     history = [{"role": m.role, "content": m.content} for m in request.history]
     history.append({"role": "user", "content": request.message})
 
-    if request.mode == "buddy":
-        messages = build_buddy_prompt(history)
-    else:
+    if request.mode == "vocabulary":
+        messages = build_vocabulary_prompt(history, request.learning_words)
+    elif request.mode == "roleplay":
         scenario_prompt = get_scenario_prompt(request.scenario_id or "coffee_shop")
         messages = build_roleplay_prompt(scenario_prompt, history)
+    else:
+        messages = build_buddy_prompt(history)
 
     async def event_stream():
         try:
@@ -137,8 +140,25 @@ async def chat_voice(
             ]
             history.append({"role": "user", "content": transcript})
 
-            # Step 3: LLM response (buddy mode for voice)
-            messages = build_buddy_prompt(history)
+            # Step 3: LLM response
+            # Fetch learning words for vocabulary mode
+            user_id = user.get("sub") or user.get("id")
+            learning_rows = await fetch_all(
+                """
+                SELECT w.word FROM user_vocabulary uv
+                JOIN words w ON w.id = uv.word_id
+                WHERE uv.user_id = $1 AND uv.status = 'learning'
+                LIMIT 30
+                """,
+                user_id,
+            )
+            learning_words = [r["word"] for r in learning_rows]
+
+            # Use vocabulary prompt if user has learning words, else buddy
+            if learning_words:
+                messages = build_vocabulary_prompt(history, learning_words)
+            else:
+                messages = build_buddy_prompt(history)
 
             full_response = []
             sentence_buffer = ""

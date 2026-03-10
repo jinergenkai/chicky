@@ -20,12 +20,11 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-
-  return GoRouter(
+  final router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       final session = authState.valueOrNull?.session;
       final isLoggedIn = session != null;
       final hasCompletedOnboarding = isLoggedIn &&
@@ -109,6 +108,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+
+  ref.listen(authStateProvider, (previous, next) {
+    router.refresh();
+  });
+
+  return router;
 });
 
 // ── Main Shell with Floating Nav Bar ────────────────────────────────────
@@ -184,12 +189,12 @@ class _MainShellScaffold extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       gradient: selected
-                          ? const LinearGradient(
+                          ? LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                ChickyColors.primary,
-                                ChickyColors.primaryDark,
+                                Theme.of(context).colorScheme.primary,
+                                Theme.of(context).colorScheme.primary,
                               ],
                             )
                           : null,
@@ -197,7 +202,7 @@ class _MainShellScaffold extends StatelessWidget {
                       boxShadow: selected
                           ? [
                               BoxShadow(
-                                color: ChickyColors.primary.withOpacity(0.3),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
