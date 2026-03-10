@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
 
 import '../../../core/services/audio_service.dart';
 import 'chat_provider.dart';
@@ -9,10 +10,23 @@ import 'chat_provider.dart';
 enum VoiceState { idle, recording, processing, playing }
 
 class VoiceNotifier extends StateNotifier<VoiceState> {
-  VoiceNotifier(this._ref) : super(VoiceState.idle);
+  VoiceNotifier(this._ref) : super(VoiceState.idle) {
+    _listenToPlayerState();
+  }
 
   final Ref _ref;
   final AudioService _audio = AudioService.instance;
+
+  void _listenToPlayerState() {
+    _audio.playerStateStream.listen((playerState) {
+      if (playerState.processingState == ProcessingState.completed) {
+        if (state == VoiceState.playing) {
+          state = VoiceState.idle;
+          _audio.clearAudioQueue();
+        }
+      }
+    });
+  }
 
   /// Start recording when user holds the mic button.
   Future<void> startRecording() async {
@@ -38,6 +52,11 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
 
     try {
       final repo = _ref.read(chatRepositoryProvider);
+      
+      // Start audio queue so playback starts as soon as first chunk arrives
+      await _audio.startAudioQueue();
+      state = VoiceState.processing;
+      
       final channel = repo.connectVoiceSocket(sessionId);
 
       // Send audio bytes
@@ -68,21 +87,21 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
           } catch (_) {
             // Unexpected non-JSON text — skip
           }
+        } else if (message is List<int>) {
+          // Changed to playing state as soon as we start receiving audio
+          if (state != VoiceState.playing) {
+            state = VoiceState.playing;
+          }
+          await _audio.enqueueAudioChunk(Uint8List.fromList(message));
         }
-        // Binary audio chunks from server are ignored here;
-        // we fetch TTS audio via HTTP below for simplicity.
       }
 
       await channel.sink.close();
 
       if (responseText.isNotEmpty) {
-        // TTS playback via HTTP (simpler than streaming binary from WS)
-        state = VoiceState.playing;
-        final audio = await repo.synthesizeSpeech(responseText);
-        if (audio != null) {
-          await _audio.playFromBytes(audio);
-        }
-
+        // Audio playback is already handled via stream enqueue.
+        // Once the queue empties naturally, the state returns to idle.
+        
         // Persist exchange to DB + update chat UI
         if (transcript.isNotEmpty) {
           await _ref.read(chatProvider.notifier).appendVoiceExchange(
@@ -94,9 +113,12 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
         }
       }
 
-      state = VoiceState.idle;
+      // We don't set state to idle here because audio might still be playing
+      // The playing state will eventually be handled by listening to playback completion,
+      // but for simplicity we keep it playing until UI action or next mic invocation.
     } catch (_) {
       state = VoiceState.idle;
+      await _audio.clearAudioQueue();
     }
   }
 
@@ -116,6 +138,7 @@ class VoiceNotifier extends StateNotifier<VoiceState> {
     if (state == VoiceState.recording) {
       _audio.stopRecording();
     }
+    _audio.clearAudioQueue();
     state = VoiceState.idle;
   }
 }

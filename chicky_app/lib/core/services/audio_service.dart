@@ -13,6 +13,7 @@ class AudioService {
 
   final AudioRecorder _recorder = AudioRecorder();
   final AudioPlayer _player = AudioPlayer();
+  ConcatenatingAudioSource? _audioQueue;
 
   bool _isRecording = false;
   String? _currentRecordPath;
@@ -61,6 +62,34 @@ class AudioService {
 
   bool get isRecording => _isRecording;
 
+  // ── Streaming / Queue Playback ─────────────────────────────────────────────
+
+  Future<void> startAudioQueue() async {
+    await _player.stop();
+    _audioQueue = ConcatenatingAudioSource(children: []);
+    await _player.setAudioSource(_audioQueue!);
+    _player.play(); // Start playing immediately; it will wait for chunks
+  }
+
+  Future<void> enqueueAudioChunk(Uint8List bytes) async {
+    if (_audioQueue == null) return;
+    
+    final source = AudioSource.uri(
+      Uri.dataFromBytes(bytes, mimeType: 'audio/mpeg'),
+    );
+    await _audioQueue!.add(source);
+    
+    // Ensure player is playing in case it stopped due to empty queue
+    if (!_player.playing) {
+      _player.play();
+    }
+  }
+
+  Future<void> clearAudioQueue() async {
+    await _player.stop();
+    _audioQueue = null;
+  }
+
   // ── Playback ──────────────────────────────────────────────────────────────
 
   Future<void> playFromBytes(Uint8List bytes) async {
@@ -87,6 +116,7 @@ class AudioService {
 
   Future<void> stopPlayback() async {
     await _player.stop();
+    _audioQueue = null;
   }
 
   Future<void> pausePlayback() async {
