@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/models/chat_message_model.dart';
@@ -73,6 +74,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final modeStr = modeToString(mode ?? _ref.read(chatModeProvider));
+      developer.log('🚀 Initializing new chat session (Mode: $modeStr)...', name: 'ChatFlow');
+      print('\x1B[36m🚀 [ChatFlow] Create new session: $modeStr\x1B[0m');
 
       final session = await _repo.createSession(mode: modeStr);
       _ref.read(activeSessionProvider.notifier).state = session;
@@ -82,7 +85,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
         messages: [],
         streamingContent: '',
       );
+      developer.log('✅ Session created successfully: ${session.id}', name: 'ChatFlow');
     } catch (e) {
+      developer.log('❌ Failed to create session: $e', name: 'ChatFlow', error: e);
+      print('\x1B[31m❌ [ChatFlow] Error init session: $e\x1B[0m');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -102,6 +108,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> sendMessage(String content) async {
     final session = _ref.read(activeSessionProvider);
     if (session == null || content.trim().isEmpty) return;
+
+    developer.log('💬 Sending text message: "$content"', name: 'ChatFlow');
+    print('\x1B[34m💬 [ChatFlow] User sent message: "$content"\x1B[0m');
 
     // Append user message optimistically
     final userMsg = ChatMessageModelX.userMessage(content, session.id);
@@ -130,6 +139,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
     final buffer = StringBuffer();
 
     try {
+      developer.log('🔄 Opening text stream from server...', name: 'ChatFlow');
+      print('\x1B[33m🔄 [ChatFlow] Receiving streaming response...\x1B[0m');
+
       await for (final chunk in _repo.sendTextMessage(
         sessionId: session.id,
         message: content,
@@ -140,6 +152,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
         buffer.write(chunk);
         state = state.copyWith(streamingContent: buffer.toString());
       }
+
+      developer.log('✅ Text stream complete. Length: ${buffer.length}', name: 'ChatFlow');
+      print('\x1B[32m✅ [ChatFlow] Completed AI response: "${buffer.toString()}"\x1B[0m');
 
       // Persist both messages
       final savedUser = await _repo.saveMessage(
@@ -165,6 +180,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
         streamingContent: '',
       );
     } catch (e) {
+      developer.log('❌ Error during sendTextMessage: $e', name: 'ChatFlow', error: e);
+      print('\x1B[31m❌ [ChatFlow] Streaming error: $e\x1B[0m');
       state = state.copyWith(
         isStreaming: false,
         streamingContent: '',
@@ -181,6 +198,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required String assistantResponse,
     List<Map<String, dynamic>> corrections = const [],
   }) async {
+    developer.log('📝 Appending voice exchange to chat history view...', name: 'ChatFlow');
     try {
       final savedUser = await _repo.saveMessage(
         sessionId: sessionId,
@@ -196,7 +214,8 @@ class ChatNotifier extends StateNotifier<ChatState> {
       state = state.copyWith(
         messages: [...state.messages, savedUser, savedAssistant],
       );
-    } catch (_) {
+    } catch (e) {
+      developer.log('⚠️ Failed to append voice exchange: $e', name: 'ChatFlow', error: e);
       // Non-critical — voice already played; swallow persistence error silently.
     }
   }
