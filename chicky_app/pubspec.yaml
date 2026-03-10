@@ -49,4 +49,5 @@ flutter:
   assets:
     - assets/avatar/
     - assets/model/wakeword/
+    - assets/audio/
     - .env

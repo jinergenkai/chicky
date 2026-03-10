@@ -29,12 +29,17 @@ VOCABULARY SUPPORT:
 - If the user asks what a word means, explain it simply with an example sentence"""
 
 
+VOICE_LENGTH_INSTRUCTION = "\n\nVOICE MODE: Keep your response to 1-2 sentences (30-50 words max). Short and clear — the user is listening, not reading."
+
+
 def build_buddy_prompt(
     history: list[dict],
     learning_words: list[str] | None = None,
+    voice: bool = False,
 ) -> list[dict]:
     """Build the message list for buddy mode."""
-    messages = [{"role": "system", "content": BUDDY_SYSTEM_PROMPT}]
+    system = BUDDY_SYSTEM_PROMPT + (VOICE_LENGTH_INSTRUCTION if voice else "")
+    messages = [{"role": "system", "content": system}]
     messages.extend(history)
     return messages
 
@@ -42,10 +47,13 @@ def build_buddy_prompt(
 def build_vocabulary_prompt(
     history: list[dict],
     learning_words: list[str],
+    voice: bool = False,
 ) -> list[dict]:
     """Build the message list for vocabulary practice mode."""
     words_str = ", ".join(learning_words) if learning_words else "none currently"
     system = VOCABULARY_SYSTEM_PROMPT.replace("{learning_words}", words_str)
+    if voice:
+        system += VOICE_LENGTH_INSTRUCTION
     messages = [{"role": "system", "content": system}]
     messages.extend(history)
     return messages

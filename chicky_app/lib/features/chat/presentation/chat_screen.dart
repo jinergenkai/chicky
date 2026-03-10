@@ -59,10 +59,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
   void _startWakeWord() {
     ref.read(wakeWordProvider.notifier).start(
-      onDetected: () {
+      onDetected: (keywordIndex) {
         final voice = ref.read(voiceProvider);
-        if (voice == VoiceState.idle) {
-          ref.read(voiceProvider.notifier).startRecording();
+        final voiceNotifier = ref.read(voiceProvider.notifier);
+        final session = ref.read(activeSessionProvider);
+
+        if (keywordIndex == 0) {
+          // "Porcupine" -> Start recording
+          if (voice == VoiceState.idle) {
+            voiceNotifier.startRecording();
+          }
+        } else if (keywordIndex == 1) {
+          // "Picovoice" -> Interrupt or Stop early
+          if (voice == VoiceState.playing) {
+            voiceNotifier.interruptPlayback();
+          } else if (voice == VoiceState.recording && session != null) {
+            voiceNotifier.stopRecordingAndSend(session.id, stoppedByWakeword: true);
+          }
         }
       },
     );
@@ -268,7 +281,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     VoiceState voiceState,
     ChatSessionModel? session,
   ) {
-    // Get the last few messages for the "lyric lines"
+    // Get all messages for the "lyric lines"
     final messages = chatState.messages;
     final streamingText = chatState.streamingContent;
     final isStreaming = chatState.isStreaming;
@@ -298,7 +311,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
             ),
           ),
 
-          // ── Lyric area (big text, center-aligned) ───────────────────
+          // ── Lyric area (big text, center-aligned, scrollable) ───
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -313,7 +326,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
           // ── Voice control area ──────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.only(bottom: 80),
+            padding: const EdgeInsets.only(bottom: 40, top: 20),
             child: VoiceButton(
               voiceState: voiceState,
               sessionId: session?.id ?? '',
@@ -327,7 +340,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
 
 // ── Voice lyrics view ─────────────────────────────────────────────────────
 
-class _VoiceLyricsView extends StatelessWidget {
+class _VoiceLyricsView extends StatefulWidget {
   const _VoiceLyricsView({
     required this.messages,
     required this.streamingText,
@@ -341,16 +354,42 @@ class _VoiceLyricsView extends StatelessWidget {
   final VoiceState voiceState;
 
   @override
+  State<_VoiceLyricsView> createState() => _VoiceLyricsViewState();
+}
+
+class _VoiceLyricsViewState extends State<_VoiceLyricsView> {
+  final _scrollController = ScrollController();
+
+  @override
+  void didUpdateWidget(covariant _VoiceLyricsView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Auto-scroll to bottom when messages or streaming text updates
+    if (widget.messages.length != oldWidget.messages.length ||
+        widget.streamingText != oldWidget.streamingText) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Show the last 2-3 exchanges as big "lyric lines"
     final displayLines = <_LyricLine>[];
 
-    // Take last 4 messages max
-    final recent = messages.length > 4
-        ? messages.sublist(messages.length - 4)
-        : messages;
-
-    for (final msg in recent) {
+    // Show all messages to allow scrolling history
+    for (final msg in widget.messages) {
       displayLines.add(_LyricLine(
         text: msg.content,
         isUser: msg.isUser,
@@ -359,9 +398,9 @@ class _VoiceLyricsView extends StatelessWidget {
     }
 
     // Add streaming content as the current "active" line
-    if (isStreaming && streamingText.isNotEmpty) {
+    if (widget.isStreaming && widget.streamingText.isNotEmpty) {
       displayLines.add(_LyricLine(
-        text: streamingText,
+        text: widget.streamingText,
         isUser: false,
         isCurrent: true,
       ));
@@ -373,7 +412,7 @@ class _VoiceLyricsView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              voiceState == VoiceState.recording
+              widget.voiceState == VoiceState.recording
                   ? Icons.graphic_eq_rounded
                   : Icons.mic_none_rounded,
               size: 48,
@@ -381,9 +420,9 @@ class _VoiceLyricsView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              voiceState == VoiceState.recording
+              widget.voiceState == VoiceState.recording
                   ? 'Listening...'
-                  : voiceState == VoiceState.processing
+                  : widget.voiceState == VoiceState.processing
                       ? 'Thinking...'
                       : 'Say something',
               style: TextStyle(
@@ -398,22 +437,28 @@ class _VoiceLyricsView extends StatelessWidget {
       );
     }
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (int i = 0; i < displayLines.length; i++) ...[
-          if (i > 0) const SizedBox(height: 20),
-          _buildLyricLine(context, displayLines[i], i, displayLines.length),
-        ],
-      ],
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      itemCount: displayLines.length,
+      itemBuilder: (context, index) {
+        final line = displayLines[index];
+        final isLast = index == displayLines.length - 1;
+        
+        // Boost visibility of the active line and recent messages
+        // Since it's a list, the newest items are at the bottom.
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: _buildLyricLine(context, line, isLast),
+        );
+      },
     );
   }
 
-  Widget _buildLyricLine(BuildContext context, _LyricLine line, int index, int total) {
-    // Older lines fade out, current line is brightest
-    final recency = (index + 1) / total; // 0→old, 1→newest
-    final alpha = line.isCurrent ? 1.0 : (0.25 + 0.6 * recency);
-    final fontSize = line.isCurrent ? 22.0 : (16.0 + 4.0 * recency);
+  Widget _buildLyricLine(BuildContext context, _LyricLine line, bool isLast) {
+    // The very last item gets full opacity. Older items are slightly faded.
+    final alpha = isLast ? 1.0 : (line.isUser ? 0.7 : 0.85);
+    final fontSize = isLast ? 22.0 : 18.0;
 
     return AnimatedDefaultTextStyle(
       duration: const Duration(milliseconds: 300),
@@ -422,23 +467,16 @@ class _VoiceLyricsView extends StatelessWidget {
             ? Theme.of(context).colorScheme.primary.withValues(alpha: alpha)
             : Colors.white.withValues(alpha: alpha),
         fontSize: fontSize,
-        fontWeight: line.isCurrent ? FontWeight.w600 : FontWeight.w400,
+        fontWeight: isLast ? FontWeight.w600 : FontWeight.w400,
         height: 1.5,
-        letterSpacing: line.isCurrent ? 0.3 : 0,
+        letterSpacing: isLast ? 0.3 : 0,
       ),
       textAlign: TextAlign.center,
       child: Text(
-        _truncateText(line.text, line.isCurrent ? 200 : 120),
+        line.text,
         textAlign: TextAlign.center,
-        maxLines: line.isCurrent ? 4 : 2,
-        overflow: TextOverflow.ellipsis,
       ),
     );
-  }
-
-  String _truncateText(String text, int maxLen) {
-    if (text.length <= maxLen) return text;
-    return '${text.substring(0, maxLen)}...';
   }
 }
 

@@ -129,7 +129,7 @@ async def chat_voice(
                 SELECT role, content FROM chat_messages
                 WHERE session_id = $1
                 ORDER BY created_at DESC
-                LIMIT 20
+                LIMIT 6
                 """,
                 session_id,
             )
@@ -156,9 +156,9 @@ async def chat_voice(
 
             # Use vocabulary prompt if user has learning words, else buddy
             if learning_words:
-                messages = build_vocabulary_prompt(history, learning_words)
+                messages = build_vocabulary_prompt(history, learning_words, voice=True)
             else:
-                messages = build_buddy_prompt(history)
+                messages = build_buddy_prompt(history, voice=True)
 
             full_response = []
             sentence_buffer = ""
