@@ -31,6 +31,7 @@ dependencies:
   camera: ^0.11.0
   google_mlkit_text_recognition: ^0.14.0
   image_picker: ^1.1.2
+  flutter_native_splash: ^2.4.3
 
 dev_dependencies:
   flutter_test:
@@ -44,10 +45,18 @@ dev_dependencies:
   custom_lint: ^0.7.0
   riverpod_lint: ^2.6.1
 
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/logo/splash.png
+  android: true
+  ios: true
+  web: false
+
 flutter:
   uses-material-design: true
   assets:
     - assets/avatar/
     - assets/model/wakeword/
     - assets/audio/
+    - assets/logo/splash.png
     - .env
