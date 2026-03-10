@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app.dart';
+
 import '../../../core/theme/colors.dart';
 import '../../../shared/widgets/chicky_widgets.dart';
+import '../../scan/presentation/scan_screen.dart';
 import '../providers/review_provider.dart';
 import '../providers/vocmap_provider.dart';
 import 'learn_session_screen.dart';
@@ -25,11 +28,21 @@ class _VocMapScreenState extends ConsumerState<VocMapScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (_tabController.indexIsChanging) return; // wait for animation to settle
+    final notifier = BottomBarVisibility.of(context);
+    if (notifier != null) {
+      notifier.value = _tabController.index == 0; // only show on Review tab
+    }
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     super.dispose();
   }
@@ -82,6 +95,7 @@ class _VocMapScreenState extends ConsumerState<VocMapScreen>
                       Tab(text: 'Review'),
                       Tab(text: 'Learn'),
                       Tab(text: 'Domains'),
+                      Tab(text: 'Scan'),
                     ],
                   ),
                 ),
@@ -95,6 +109,7 @@ class _VocMapScreenState extends ConsumerState<VocMapScreen>
                   _ReviewTab(),
                   _NewWordsTab(),
                   _DomainsTab(),
+                  ScanScreen(),
                 ],
               ),
             ),

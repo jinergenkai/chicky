@@ -184,8 +184,8 @@ class WordDetailSheet extends ConsumerWidget {
                   icon: const Icon(Icons.hub_outlined),
                   label: const Text('Explore Word Web'),
                   onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.of(context).push(
+                    Navigator.of(context, rootNavigator: true).pop();
+                    Navigator.of(context, rootNavigator: true).push(
                       MaterialPageRoute(
                         builder: (_) => WordWebScreen(word: word),
                       ),

@@ -24,7 +24,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
     with SingleTickerProviderStateMixin {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
-  bool _isVoiceMode = false;
+  bool _isVoiceMode = true;
 
   late final AnimationController _modeAnimController;
   late final Animation<double> _modeAnim;
@@ -40,8 +40,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen>
       parent: _modeAnimController,
       curve: Curves.easeInOutCubic,
     );
+    // Start in voice mode
+    _modeAnimController.value = 1.0;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(chatProvider.notifier).initSession();
+      _startWakeWord();
     });
   }
 

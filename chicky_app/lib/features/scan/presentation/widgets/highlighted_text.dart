@@ -57,7 +57,7 @@ class HighlightedText extends StatelessWidget {
                 ? FontWeight.normal
                 : FontWeight.w600,
             decoration: TextDecoration.underline,
-            decorationColor: color.withOpacity(0.5),
+            decorationColor: color.withValues(alpha: 0.5),
             decorationThickness: 1.5,
           ),
           recognizer: TapGestureRecognizer()

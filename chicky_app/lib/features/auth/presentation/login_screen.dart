@@ -14,8 +14,9 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailController =
+      TextEditingController(text: "nmhung.works@gmail.com");
+  final _passwordController = TextEditingController(text: "123123");
   bool _obscurePassword = true;
 
   @override
@@ -67,7 +68,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: const Center(
@@ -104,7 +108,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Please enter your email';
+                      if (v == null || v.isEmpty)
+                        return 'Please enter your email';
                       if (!v.contains('@')) return 'Please enter a valid email';
                       return null;
                     },
@@ -130,8 +135,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Please enter your password';
-                      if (v.length < 6) return 'Password must be at least 6 characters';
+                      if (v == null || v.isEmpty)
+                        return 'Please enter your password';
+                      if (v.length < 6)
+                        return 'Password must be at least 6 characters';
                       return null;
                     },
                   ),
